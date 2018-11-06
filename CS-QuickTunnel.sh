@@ -1,5 +1,5 @@
 #!/bin/bash
-# CS-QuickTunnel v.0.6.7
+# CS-QuickTunnel v.0.6.8
 # Coded by: Cyber Secrets - Information Warfare Center
 # Tool for Red Team ops
 # Github: https://github.com/infosecwriter/CS-QuickTunnel
@@ -68,8 +68,7 @@ startmenu() {
 				git pull
 			else 
 				git clone https://github.com/thelinuxchoice/shellphish
-				cd shellphish
-				
+				cd shellphish	
 			fi
 			sleep 3
 			clear
