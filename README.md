@@ -24,45 +24,45 @@ For example:
 - If on the Internet and using Tor, go to ???????.onion.to/installs.php
 - If Ngrok.io, go to ?????.ngrok.io/installs.php
 
-[*] SSH Reverse Tunneling
-[*] NGROK Reverse Tunneling
-[*] TOR Reverse Tunneling
-[*] SOCAT Reverse Tunneling Proxy
-[*] Check Dependencies
-[*] Shellphish @thelinuxchoice
+ - SSH Reverse Tunneling
+ - NGROK Reverse Tunneling
+ - TOR Reverse Tunneling
+ - SOCAT Reverse Tunneling Proxy
+ - Check Dependencies
+ - Shellphish @thelinuxchoice
 
 -----
-[*]  SSH Tunneling
-[*][*]  Reverse tunnel
-[*][*]  Run a NetCat listener reverse tunnel
-[*][*]    Run a NetCat listener reverse connect - reverse tunnel
-[*][*]    Run a NoMachine listener reverse tunnel 
-[*][*]    Run a VNC listener reverse tunnel 
-[*][*]    Run PHP Server Through a Serveo.net reverse tunnel
-[*][*]    Meterpreter reverse tunnels
+ -  SSH Tunneling
+ - -  Reverse tunnel
+ - -  Run a NetCat listener reverse tunnel
+ - - Run a NetCat listener reverse connect - reverse tunnel
+ - - Run a NoMachine listener reverse tunnel 
+ - - Run a VNC listener reverse tunnel 
+ - - Run PHP Server Through a Serveo.net reverse tunnel
+ - - Meterpreter reverse tunnels
 
 
-[*]  Ngrok.io
-[*][*]  Reverse tunnel
-[*][*]  Run a NetCat listener reverse tunnel
-[*][*]  Run a NetCat listener reverse connect - reverse tunnel
-[*][*]  Run a NoMachine listener reverse tunnel 
-[*][*]  Run a VNC listener reverse tunnel 
-[*][*]  Run PHP Server Through a Serveo.net reverse tunnel
-[*][*]  Meterpreter reverse tunnels
+ -  Ngrok.io
+ - -  Reverse tunnel
+ - -  Run a NetCat listener reverse tunnel
+ - -  Run a NetCat listener reverse connect - reverse tunnel
+ - -  Run a NoMachine listener reverse tunnel 
+ - -  Run a VNC listener reverse tunnel 
+ - -  Run PHP Server Through a Serveo.net reverse tunnel
+ - -  Meterpreter reverse tunnels
 
-[*]  Tor
-[*][*]  Tor Hidden Service - Reverse Tunnel
-[*][*]  Run a NetCat listener  reverse tunnels
-[*][*]  Run a NetCat listener reverse conect -  reverse tunnels
-[*][*]  Run a NoMachine listener reverse tunnel
-[*][*]  Run a VNC listener reverse tunnel
+ -  Tor
+ - -  Tor Hidden Service - Reverse Tunnel
+ - -  Run a NetCat listener  reverse tunnels
+ - -  Run a NetCat listener reverse conect -  reverse tunnels
+ - -  Run a NoMachine listener reverse tunnel
+ - -  Run a VNC listener reverse tunnel
 
 
-[*]  Socat proxy
-[*][*]  SSH Reverse Tunnel Proxy
-[*][*]  NGROK Reverse Tunnel Proxy
-[*][*]  Tor Reverse Tunnel Proxy
+ -  Socat proxy
+ - -  SSH Reverse Tunnel Proxy
+ - -  NGROK Reverse Tunnel Proxy
+ - -  Tor Reverse Tunnel Proxy
 
 
 ---
