@@ -391,7 +391,6 @@ menupayloads() {
 			OSType="Windows"
 			$tunnel
 			;;
-
 		13)      
 			payload="windows/meterpreter/reverse_https"
 			platform="-a x86 --platform windows"
@@ -416,8 +415,6 @@ menupayloads() {
 			OSType="Windows"
 			$tunnel
 			;;
-
-
 		21)      
 			payload="linux/x86/meterpreter/reverse_tcp"
 			platform=""
@@ -514,7 +511,6 @@ menupayloads() {
 			OSType="Android"
 			$tunnel
 			;;
-
 		51)      
 			payload="apple_ios/aarch64/meterpreter_reverse_tcp"
 			platform=""
@@ -539,7 +535,6 @@ menupayloads() {
 			OSType="Mac"
 			$tunnel
 			;;
-
 		*)
 		startmenu
 		;;
