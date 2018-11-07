@@ -130,7 +130,6 @@ menussh() {
 		menussh
 		;;
 	esac
-
 }
 
 menungrok() {
@@ -235,7 +234,6 @@ menutor() {
 			;;
 		5|05)      
 			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
-	
 			toritforward
 			vncserver -rfbport $lport
 			;;
@@ -308,18 +306,9 @@ menusocat() {
 	read rrport; rrport="${rrport:-${default_rrport}}"
 	socatitforward
 	case $option in
-		1|01)      
-			serveoitforward
-			menusocat
-			;;
-		2|02)  
-			ngrokitforward 
-			menusocat
-			;;
-		3|03)      
-			toritforward
-			menusocat
-			;;
+		1|01) serveoitforward; menusocat ;;
+		2|02) ngrokitforward; menusocat ;;
+		3|03) toritforward; menusocat ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep 1
@@ -354,7 +343,8 @@ menumetasploit() {
 	menupayloads
 }
 
-menupayloads() {		
+menupayloads() {
+	banner
 	printf "\e[92m  [*] Windows Meterpreter Reverse TCP Stager                 = 11\n"
 	printf "  [*] Windows Meterpreter Windows Reverse HTTP Stager        = 12\n"
 	printf "  [*] Windows Meterpreter Windows Reverse HTTPS Stager       = 13\n"
@@ -724,8 +714,6 @@ toritforward() {
 		chmod +x reverse-ngrok-connect.sh
 		xterm ./reverse-ngrok-connect.sh &
 	fi
-
-
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
 	menutor
@@ -880,7 +868,6 @@ servetor() {
 	printf "   You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname:$lport throught Tor\n\n\e[92m"
 	printf "   You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname.to:$lport throught the Internet\n\n\e[92m"
 	printf "If the page doesn't load, wait a minute and try again...\n\nPress enter to return to main menu or CTRL+C to end session"
-	
 	read waitfortor
 	menutor
 }
