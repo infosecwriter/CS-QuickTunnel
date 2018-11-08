@@ -1,4 +1,4 @@
-CS-QuickTunnel V.0.6.9 - Reverse Tunnels
+CS-QuickTunnel V.0.7.0 - Reverse Tunnels
 https://github.com/infosecwriter/CS-QuickTunnel
 
 The CS-QuickTunnel is a reverse tunneling too that allows you to run a local service on localhost/127.0.0.1 to bypass NAT and firewalls by making outbound connections from a third party server on the Internet. 
