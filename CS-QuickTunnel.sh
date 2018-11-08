@@ -178,10 +178,10 @@ menutor() {
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
 	printf "  Tor Hidden Service - PHP Web Server                        = 10\n"
-	printf "  Show Tor Hidden Service .onion Address                     = 11\n"
-	printf "  Add User & Install Tor Browser                             = 12\n"
-	printf "  Reset .onion Address                                       = 13\n"
-	printf "  Remove User & Tor Browser                                  = 14\n"
+	printf "  Show Tor Hidden Service .onion Address                     = 91\n"
+	printf "  Add User & Install Tor Browser                             = 92\n"
+	printf "  Reset .onion Address                                       = 93\n"
+	printf "  Remove User & Tor Browser                                  = 94\n"
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
@@ -209,7 +209,7 @@ menutor() {
 			;;
 		10)     lip; servetor $lport; menutor
 			;;
-		11)     systemctl restart tor
+		91)     systemctl restart tor
 			if [[ -e /var/lib/tor/myservices/hostname ]]; then
 				hostname=$(cat /var/lib/tor/myservices/hostname)
 				printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"
@@ -219,9 +219,9 @@ menutor() {
 			printf "\e[92mPress ENTER to continue"; read me
 			menutor
 			;;
-		12)     systemctl restart tor; torview; menutor
+		92)     systemctl restart tor; torview; menutor
 			;;
-		13)     printf "\e[93mAre you sure?  This can't be reversed without a backup. UPPER CASE 'Y' to delete: "; read me
+		93)     printf "\e[93mAre you sure?  This can't be reversed without a backup. UPPER CASE 'Y' to delete: "; read me
 			printf $me
 			if [[ $me == "Y" ]]; then
 				hostname=""
@@ -234,7 +234,7 @@ menutor() {
 			printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"; sleep 5
 			menutor
 			;;
-		14)     systemctl stop tor; tordeview; systemctl start tor; menutor	
+		94)     systemctl stop tor; tordeview; systemctl start tor; menutor	
 			;;
 		*)	
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
@@ -582,8 +582,6 @@ torview() {
 		sudo -u kalitor -H ./start-tor-browser.desktop https://duckduckgo.com cybersec.tv
 		cd $curdir
 	fi
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read me
 }
 
 timex() {
@@ -596,6 +594,11 @@ timex() {
 		let tortimex++
 	done
 	printf "\n\n"
+}
+
+waitforit() {
+	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
+	read me
 }
 
 tordeview() {
@@ -658,8 +661,7 @@ toritforward() {
 		chmod +x reverse-tor-connect.sh
 		xterm ./reverse-tor-connect.sh &
 	fi
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read me
+	waitforit
 }
 
 ngrokitforward() {
@@ -684,8 +686,7 @@ ngrokitforward() {
 		chmod +x reverse-ngrok-connect.sh
 		xterm ./reverse-ngrok-connect.sh &
 	fi
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read me
+	waitforit
 }
 
 socatitforward() {
@@ -711,16 +712,13 @@ serveoitforward() {
 	fi
 	printf "\e[92mStarting tunnel...\e[0m\n"
 	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $3:localhost:$1 $2
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read me
+	waitforit
 }
 
 
 serveserveo() {
 	# Modified from SHELLPHISH, AUTHOR: @thelinuxchoice
-	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
-	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
-	sleep 2
+	servephp $1
 	if [[ -e sendlink ]]; then
 		rm -rf sendlink
 	fi
@@ -737,11 +735,15 @@ serveserveo() {
 	$2
 }
 
-servengrok() {
-	ngrokme
+servephp() {
 	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
 	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
 	sleep 2
+}
+
+servengrok() {
+	ngrokme
+	servephp $1
 	printf "\e[1;92m[\e[0m*\e[1;92m]Starting ngrok server...\n"
 	./ngrok http $1 > /dev/null 2>&1 &
 	sleep 5
@@ -751,8 +753,7 @@ servengrok() {
 	printf "\e[1;92m[\e[0m*\e[1;92m]Opening with Firefox in 3 seconds\n"
 	sleep 3 
 	firefox $link $link/installs.php
-	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
-	read waitforngrok
+	waitforit
 }
 
 servetor() {
@@ -760,9 +761,7 @@ servetor() {
 	aa-complain system_tor
 	systemctl restart apparmor
 	systemctl restart tor
-	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
-	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
-	sleep 2
+	servephp $1
 	printf "\e[1;92m[\e[0m*\e[1;92m] Setting up Tor hidden service... \n"
 	if (grep -Fxq "HTTPTunnelPort 0.0.0.0:9080" /etc/tor/torrc); then
 	    	sleep 1
@@ -801,8 +800,8 @@ servetor() {
 	printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: $hostname\n\n"
 	printf "\e[1;92m[\e[0m*\e[1;92m] You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname:$1 throught Tor\n\n\e[92m"
 	printf "\e[1;92m[\e[0m*\e[1;92m] You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname.to:$1 throught the Internet\n\n\e[92m"
-	printf "If the page doesn't load, wait a minute and try again...\n\nPress enter to return to main menu or CTRL+C to end session"
-	read waitfortor
+	printf "If the page doesn't load, wait a minute and try again...\n\n"
+	waitforit
 }
 
 stop() {
