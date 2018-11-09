@@ -76,7 +76,8 @@ menussh() {
 	printf "  Run a NetCat listener reverse connect - reverse tunnel     =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
-	printf "  Run PHP Server Through a Serveo.net reverse tunnel         = 10\n"	
+	printf "  Run PHP HTTP Server Through Serveo.net reverse tunnel      = 10\n"
+	printf "  Run Python HTTP Server Through Serveo.net reverse tunnel   = 11\n"	
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
@@ -109,9 +110,8 @@ menussh() {
 			vncserver -rfbport $lport
 			serveoitforward $lport $rserver $rport
 			;;
-		10)     lip 
-			serveserveo $lport menussh
-			;;
+		10)     lip;  httpserver="servephp"; serveserveo $lport menussh ;;
+		11)     lip;  httpserver="servepython"; serveserveo $lport menussh ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep
@@ -128,7 +128,8 @@ menungrok() {
 	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
-	printf "  Run PHP Server Through Ngrok.io  reverse tunnels           = 10\n"
+	printf "  Run PHP HTTP Server Through Ngrok.io  reverse tunnels      = 10\n"
+	printf "  Run Python HTTP Server Through Ngrok.io  reverse tunnels   = 11\n"
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
@@ -160,7 +161,8 @@ menungrok() {
 			vncserver -rfbport $lport
 			ngrokitforward $lport; menungrok
 			;;
-		10)     lip; servengrok $lport; menungrok ;;
+		10)     lip; httpserver="servephp"; servengrok $lport; menungrok ;;
+		11)     lip; httpserver="servepython"; servengrok $lport; menungrok ;;
 		*)
 		printf "\e[1;93m [!] Invalid option!\e[0m\n"
 		sleep
@@ -177,7 +179,8 @@ menutor() {
 	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
-	printf "  Tor Hidden Service - PHP Web Server                        = 10\n"
+	printf "  Tor Hidden Service - PHP HTTP Server                       = 10\n"
+	printf "  Tor Hidden Service - Python HTTP Server                    = 11\n"
 	printf "  Show Tor Hidden Service .onion Address                     = 91\n"
 	printf "  Add User & Install Tor Browser                             = 92\n"
 	printf "  Reset .onion Address                                       = 93\n"
@@ -207,8 +210,8 @@ menutor() {
 			vncserver -rfbport $lport
 			menutor
 			;;
-		10)     lip; servetor $lport; menutor
-			;;
+		10)     lip; httpserver="servephp"; servetor $lport; menutor ;;
+		11)     lip; httpserver="servepython"; servetor $lport; menutor ;;
 		91)     systemctl restart tor
 			if [[ -e /var/lib/tor/myservices/hostname ]]; then
 				hostname=$(cat /var/lib/tor/myservices/hostname)
@@ -718,7 +721,7 @@ serveoitforward() {
 
 serveserveo() {
 	# Modified from SHELLPHISH, AUTHOR: @thelinuxchoice
-	servephp $1
+	$httpserver $1
 	if [[ -e sendlink ]]; then
 		rm -rf sendlink
 	fi
@@ -736,14 +739,24 @@ serveserveo() {
 }
 
 servephp() {
-	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP server on port \e[97m\e[5m$1 \e[25m...\n"
-	cd site && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local PHP HTTP server on port \e[97m\e[5m$1 \e[25m...\n"
+	mkdir PHPHTTP > /dev/null 2>&1 &
+	cp -r site/*.* PHPHTTP/
+	cd PHPHTTP && php -S 127.0.0.1:$1 > /dev/null 2>&1 & 
+	sleep 2
+}
+
+servepython() {
+	printf "\e[1;92m[\e[0m*\e[1;92m] Starting local Python HTTP server on port \e[97m\e[5m$1 \e[25m...\n"
+	mkdir PythonHTTP > /dev/null 2>&1 &
+	cp -r site/installs/*.* PythonHTTP/
+	cd PythonHTTP && python -m SimpleHTTPServer $1 > /dev/null 2>&1 & 
 	sleep 2
 }
 
 servengrok() {
 	ngrokme
-	servephp $1
+	$httpserver $1
 	printf "\e[1;92m[\e[0m*\e[1;92m]Starting ngrok server...\n"
 	./ngrok http $1 > /dev/null 2>&1 &
 	sleep 5
@@ -761,7 +774,7 @@ servetor() {
 	aa-complain system_tor
 	systemctl restart apparmor
 	systemctl restart tor
-	servephp $1
+	$httpserver $1
 	printf "\e[1;92m[\e[0m*\e[1;92m] Setting up Tor hidden service... \n"
 	if (grep -Fxq "HTTPTunnelPort 0.0.0.0:9080" /etc/tor/torrc); then
 	    	sleep 1
