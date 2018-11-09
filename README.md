@@ -39,6 +39,7 @@ For example:
  - - Run a NoMachine listener reverse tunnel 
  - - Run a VNC listener reverse tunnel 
  - - Run PHP Server Through a Serveo.net reverse tunnel
+ - - Run Python HTTP server
  - - Meterpreter reverse tunnels
 
 
@@ -49,10 +50,13 @@ For example:
  - -  Run a NoMachine listener reverse tunnel 
  - -  Run a VNC listener reverse tunnel 
  - -  Run PHP Server Through a Serveo.net reverse tunnel
+ - - Run Python HTTP server
  - -  Meterpreter reverse tunnels
 
  -  Tor
  - -  Tor Hidden Service - Reverse Tunnel
+ - - PHP server
+ - - Python HTTP server 
  - -  Run a NetCat listener  reverse tunnels
  - -  Run a NetCat listener reverse conect -  reverse tunnels
  - -  Run a NoMachine listener reverse tunnel
