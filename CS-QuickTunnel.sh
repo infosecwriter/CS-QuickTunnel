@@ -33,8 +33,14 @@ startmenu() {
 		99) 	stop 1 ;;
 		1|01) 	banner
 			printf "\e[92m  SSH tunneling...\n"
-			case $option in
-				1|01) lip; rip; printf "  SSH Username: "; read user; sshme $lport $rserver $rport $user "-L"; waitforit ;;
+			printf "  SSH Tunneling -L (local proxy to SSH server local address)  =  1\n"
+			printf "  SSH Tunneling -L (local proxy to SSH pivot if SSH allows)   =  2\n"
+			printf "  SSH Reverse Tunneling -R                                    =  3\n"
+			read -p $'  Choose an option: \e[37;1m' optionssh
+			case $optionssh in
+				1|01) lip; rip; sshme $lport $rserver $rport "-nNT -L" "127.0.0.1"; waitforit ;;
+				2|02) lip; rip; read -p $'  Pivot to?' pivit; sshme $lport $rserver $rport "-nNT -L" $pivot; waitforit ;;
+				3|03) lip; rip; sshme $rport $rserver $lport "-nNT -R" "127.0.0.1"; waitforit ;;
 				*)
 			esac
 			startmenu
@@ -542,12 +548,12 @@ nomachineme() {
 }
 
 sshme () {
-#	ssh  > /dev/null 2>&1 &
-	printf "  SSH Password: "
-	read pass
-	sshpass -p$pass ssh -o StrictHostKeyChecking=no -o CheckHostIP=no $5 $1:127.0.0.1:$3 $4@$2 
-
-
+#	add username to server if needed.  Example: "user@serverip"
+	sshconnect="ssh -o StrictHostKeyChecking=no -o CheckHostIP=no $4 $1:$5:$3 $2"
+	printf $sshconnect
+	$sshconnect
+	printf "Connection..."
+	waitforit
 }
 
 ngrokme() {
