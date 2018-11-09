@@ -64,6 +64,7 @@ startmenu() {
 			command -v php > /dev/null 2>&1 || { apt install php | tee -a dep.log; }
 			command -v apparmor-utils > /dev/null 2>&1 || { apt install apparmor-utils | tee -a dep.log; }
 			command -v vncserver > /dev/null 2>&1 || { apt install tightvncserver | tee -a dep.log; }
+			apt install sshpass
 			if [[ -e ngrok ]]; then
 				ngrokme
 			fi
@@ -541,7 +542,12 @@ nomachineme() {
 }
 
 sshme () {
-	ssh $5 $1:127.0.0.1:$3 $4@$2
+#	ssh  > /dev/null 2>&1 &
+	printf "  SSH Password: "
+	read pass
+	sshpass -p$pass ssh -o StrictHostKeyChecking=no -o CheckHostIP=no $5 $1:127.0.0.1:$3 $4@$2 
+
+
 }
 
 ngrokme() {
@@ -772,11 +778,9 @@ servengrok() {
 	sleep 5
 	link=$(curl -s -N http://127.0.0.1:4040/status | grep -o "https://[0-9a-z]*\.ngrok.io")
 	printf "\e[1;92m[\e[0m*\e[1;92m] Congrats!!!  Your new server: \e[37;1m$link\n" 
-	printf "\n"
-	tinyurl
 	printf "\e[1;92m[\e[0m*\e[1;92m]Opening with Firefox in 3 seconds\n"
 	sleep 3 
-	firefox $link $link/installs.php
+	firefox $link
 	waitforit
 }
 
