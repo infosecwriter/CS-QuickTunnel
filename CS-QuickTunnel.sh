@@ -1,5 +1,5 @@
 #!/bin/bash
-# CS-QuickTunnel v.0.7.0
+# CS-QuickTunnel v.0.7.1
 # Coded by: Cyber Secrets - Information Warfare Center
 # Tool for Red Team ops
 # Github: https://github.com/infosecwriter/CS-QuickTunnel
