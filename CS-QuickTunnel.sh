@@ -188,7 +188,7 @@ menuserveo() {
 menutor() {
 	banner
 	printf "\e[92m  Tor Hidden Service - Reverse Tunnel                        =  1\n"
-	printf "  Run a NetCat listener  reverse tunnels                     =  2\n"
+	printf "  Run a NetCat listener reverse tunnels                      =  2\n"
 	printf "  Run a NetCat listener reverse conect -  reverse tunnels    =  3\n"
 	printf "  Run a NoMachine listener reverse tunnel                    =  4\n"
 	printf "  Run a VNC listener reverse tunnel                          =  5\n"
@@ -211,7 +211,7 @@ menutor() {
 			;;
 		3|03)   lip; toritforward $lport; printf "\e[1;93m [!] Starting NetCat Server on port "$lport"!\e[0m\n"
 			echo "nc -lvp $lport -e /bin/sh > /dev/null 2>&1 &" nc.sh
-			hash nc.sh
+			xterm nc.sh
 			menutor
 			;;
 		4|04)   lport="4000"; toritforward $lport; nomachineme; menutor
@@ -223,7 +223,8 @@ menutor() {
 			;;
 		10)     lip; httpserver="servephp"; servetor $lport; menutor ;;
 		11)     lip; httpserver="servepython"; servetor $lport; menutor ;;
-		91)     systemctl restart tor
+		91)     chown -R debian-tor /var/lib/tor/myservices/
+			systemctl restart tor
 			if [[ -e /var/lib/tor/myservices/hostname ]]; then
 				hostname=$(cat /var/lib/tor/myservices/hostname)
 				printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Tor hidden service hostname is: \e[37;1m$hostname\n\n\n"
